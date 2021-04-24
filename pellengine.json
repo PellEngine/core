@@ -1,0 +1,9 @@
+{
+  "name": "pellengine",
+  "src": [
+    "src/pellengine/window/window.cpp"
+  ],
+  "androidSrc": [
+    "src/pellengine/vulkan/vulkan_android_wrapper.cpp"
+  ]
+}

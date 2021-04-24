@@ -1,0 +1,5 @@
+{
+  "androidSdk": "path/to/android/sdk",
+  "androidNdk": "path/to/android/sdk/ndk",
+  "androidBuildTools": "path/to/android/sdk/build-tools/version"
+}

@@ -1,0 +1,19 @@
+{
+  "name": "core",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:android": "node build-android.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PellEngine/core.git"
+  },
+  "author": "Per Henrik Jakobsson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PellEngine/core/issues"
+  },
+  "homepage": "https://github.com/PellEngine/core#readme"
+}
