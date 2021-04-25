@@ -9,7 +9,7 @@ namespace pellengine {
 
 class Window {
  public:
-  Window(std::string name);
+  Window(std::string name, bool enableValidationLayers);
   ~Window();
 
   Window(const Window&) = delete;
@@ -25,9 +25,18 @@ class Window {
  private:
   std::string name;
   bool initialized;
+  bool enableValidationLayers;
+
   VkInstance instance;
+  VkDebugUtilsMessengerEXT debugMessenger;
 
   bool createInstance();
+  bool setupDebugMessenger();
+
+  void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+  bool checkValidationLayerSupport();
+  
+  const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 };
 
 }
