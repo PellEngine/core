@@ -82,8 +82,8 @@ const buildLib = async () => {
     '-fpic',
     '-Os',
     '-Wall',
-    '-DANDROID',
-    '-DANDROID_FULLSCREEN',
+    '-D ANDROID',
+    '-D ANDROID_FULLSCREEN',
     `-I${path.join(ndk, 'sysroot', 'usr', 'include').toString()}`,
     `-I${path.join(ndk, 'sysroot', 'usr', 'include', 'android').toString()}`,
     `-I${path.join(ndk, 'toolchains', 'llvm', 'prebuilt', osName, 'sysroot', 'usr', 'include', 'android').toString()}`,
@@ -91,6 +91,7 @@ const buildLib = async () => {
     '-c',
     '-D DEBUG',
     '-D PLATFORM="ANDROID"',
+    '-DVK_USE_PLATFORM_ANDROID_KHR',
     '-std=c++17'
   ];
 

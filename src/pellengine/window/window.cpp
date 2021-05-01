@@ -61,6 +61,7 @@ void Window::initialize() {
 
   createInstance();
   setupDebugMessenger();
+  createSurface();
   pickPhysicalDevice();
   createLogicalDevice();
 
@@ -72,9 +73,14 @@ void Window::terminate() {
     DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
   }
 
+  vkDestroySurfaceKHR(instance, surface, nullptr);
   vkDestroyInstance(instance, nullptr);
   vkDestroyDevice(device, nullptr);
 
+  #ifdef ANDROID
+    this->androidPlatformWindow = nullptr;
+  #endif
+  
   this->initialized = false;
 }
 
@@ -169,6 +175,20 @@ void Window::setupDebugMessenger() {
   }
 }
 
+void Window::createSurface() {
+  #ifdef ANDROID
+    VkAndroidSurfaceCreateInfoKHR createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
+    createInfo.pNext = nullptr;
+    createInfo.flags = 0;
+    createInfo.window = this->androidPlatformWindow;
+
+    if(vkCreateAndroidSurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCCESS) {
+      throw std::runtime_error("Failed to create android surface.");
+    }
+  #endif
+}
+
 void Window::pickPhysicalDevice() {
   uint32_t deviceCount;
   vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
@@ -196,19 +216,25 @@ void Window::pickPhysicalDevice() {
 void Window::createLogicalDevice() {
   QueueFamilyIndices indices = this->findQueueFamilies(this->physicalDevice);
 
-  VkDeviceQueueCreateInfo queueCreateInfo{};
-  queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-  queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-  queueCreateInfo.queueCount = 1;
+  std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+  std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
+
   float queuePriority = 1.0;
-  queueCreateInfo.pQueuePriorities = &queuePriority;
+  for(uint32_t queueFamily : uniqueQueueFamilies) {
+    VkDeviceQueueCreateInfo queueCreateInfo{};
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.queueFamilyIndex = queueFamily;
+    queueCreateInfo.queueCount = 1;
+    queueCreateInfo.pQueuePriorities = &queuePriority;
+    queueCreateInfos.push_back(queueCreateInfo);
+  }
 
   VkPhysicalDeviceFeatures deviceFeatures{};
 
   VkDeviceCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-  createInfo.pQueueCreateInfos = &queueCreateInfo;
-  createInfo.queueCreateInfoCount = 1;
+  createInfo.pQueueCreateInfos = queueCreateInfos.data();
+  createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
   createInfo.pEnabledFeatures = &deviceFeatures;
   createInfo.enabledExtensionCount = 0;
 
@@ -224,6 +250,7 @@ void Window::createLogicalDevice() {
   }
 
   vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
+  vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &presentQueue);
 }
 
 /*
@@ -251,6 +278,13 @@ QueueFamilyIndices Window::findQueueFamilies(VkPhysicalDevice device) {
   for(const auto& queueFamily : queueFamilies) {
     if(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
       indices.graphicsFamily = i;
+    }
+
+    VkBool32 presentSupport = false;
+    vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+
+    if(presentSupport) {
+      indices.presentFamily = i;
     }
 
     if(indices.isComplete()) {

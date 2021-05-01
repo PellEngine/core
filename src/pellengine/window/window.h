@@ -5,14 +5,17 @@
 #include <string>
 #include <vector>
 #include <optional>
+#include <set>
+#include <android/log.h>
 
 namespace pellengine {
 
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphicsFamily;
+  std::optional<uint32_t> presentFamily;
 
   bool isComplete() {
-    return graphicsFamily.has_value();
+    return graphicsFamily.has_value() && presentFamily.has_value();
   }
 };
 
@@ -31,6 +34,12 @@ class Window {
     return initialized;
   }
 
+  #ifdef ANDROID
+    void setAndroidPlatformWindow(ANativeWindow* androidPlatformWindow) {
+      this->androidPlatformWindow = androidPlatformWindow;
+    }
+  #endif
+
  private:
   std::string name;
   bool initialized;
@@ -40,10 +49,18 @@ class Window {
   VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
   VkDevice device;
   VkDebugUtilsMessengerEXT debugMessenger;
+  VkSurfaceKHR surface;
+
   VkQueue graphicsQueue;
+  VkQueue presentQueue;
+
+  #ifdef ANDROID
+    ANativeWindow* androidPlatformWindow;
+  #endif
 
   void createInstance();
   void setupDebugMessenger();
+  void createSurface();
   void pickPhysicalDevice();
   void createLogicalDevice();
 
