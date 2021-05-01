@@ -4,8 +4,17 @@
 #include <pellengine/vulkan/vulkan_wrapper.h>
 #include <string>
 #include <vector>
+#include <optional>
 
 namespace pellengine {
+
+struct QueueFamilyIndices {
+  std::optional<uint32_t> graphicsFamily;
+
+  bool isComplete() {
+    return graphicsFamily.has_value();
+  }
+};
 
 class Window {
  public:
@@ -15,8 +24,8 @@ class Window {
   Window(const Window&) = delete;
   Window &operator=(const Window&) = delete;
 
-  bool initialize();
-  bool terminate();
+  void initialize();
+  void terminate();
 
   bool isInitialized() {
     return initialized;
@@ -28,14 +37,21 @@ class Window {
   bool enableValidationLayers;
 
   VkInstance instance;
+  VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+  VkDevice device;
   VkDebugUtilsMessengerEXT debugMessenger;
+  VkQueue graphicsQueue;
 
-  bool createInstance();
-  bool setupDebugMessenger();
+  void createInstance();
+  void setupDebugMessenger();
+  void pickPhysicalDevice();
+  void createLogicalDevice();
 
   void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
   bool checkValidationLayerSupport();
-  
+  bool isDeviceSuitable(VkPhysicalDevice device);
+  QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+
   const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 };
 

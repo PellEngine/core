@@ -90,7 +90,8 @@ const buildLib = async () => {
     `-I${path.join(directory, 'src').toString()}`,
     '-c',
     '-D DEBUG',
-    '-D PLATFORM="ANDROID"'
+    '-D PLATFORM="ANDROID"',
+    '-std=c++17'
   ];
 
   const archFlags = {

@@ -50,41 +50,35 @@ Window::~Window() {
   this->terminate();
 }
 
-bool Window::initialize() {
+void Window::initialize() {
   if(!InitVulkan()) {
     throw std::runtime_error("Vulkan is not available on this device.");
-    return false;
   }
 
   if(this->initialized) {
-    return true;
+    return;
   }
 
-  if(!this->createInstance()) {
-    return false;
-  }
-
-  if(!this->setupDebugMessenger()) {
-    return false;
-  }
+  createInstance();
+  setupDebugMessenger();
+  pickPhysicalDevice();
+  createLogicalDevice();
 
   this->initialized = true;
-  return true;
 }
 
-bool Window::terminate() {
-
+void Window::terminate() {
   if(enableValidationLayers) {
     DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
   }
 
   vkDestroyInstance(instance, nullptr);
-  
+  vkDestroyDevice(device, nullptr);
+
   this->initialized = false;
-  return true;
 }
 
-bool Window::createInstance() {
+void Window::createInstance() {
   if(enableValidationLayers && !checkValidationLayerSupport()) {
     throw std::runtime_error("Validation layers are requested, but your device doesn't support them.");
   }
@@ -144,7 +138,6 @@ bool Window::createInstance() {
 
   if(!extensionsPresent) {
     throw std::runtime_error("This device doesn't support all the required extensions.");
-    return false;
   }
 
   createInfo.enabledExtensionCount = static_cast<uint32_t>(instanceExtensions.size());
@@ -164,22 +157,110 @@ bool Window::createInstance() {
 
   if(vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create vulkan instance.");
-    return false;
   }
-
-  return true;
 }
 
-bool Window::setupDebugMessenger() {
-  if(!this->enableValidationLayers) return false;
+void Window::setupDebugMessenger() {
+  if(!this->enableValidationLayers) return;
   VkDebugUtilsMessengerCreateInfoEXT createInfo;
   this->populateDebugMessengerCreateInfo(createInfo);
   if(CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
     throw std::runtime_error("Failed to set up debug messenger");
-    return false;
+  }
+}
+
+void Window::pickPhysicalDevice() {
+  uint32_t deviceCount;
+  vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+
+  if(deviceCount == 0) {
+    throw std::runtime_error("Failed to find GPU with vulkan support!");
   }
 
-  return true;
+  std::vector<VkPhysicalDevice> devices(deviceCount);
+  vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+
+  // Pick the first suitable device
+  for(const auto& device : devices) {
+    if(isDeviceSuitable(device)) {
+      this->physicalDevice = device;
+      break;
+    }
+  }
+
+  if(this->physicalDevice == VK_NULL_HANDLE) {
+    throw std::runtime_error("Failed to find suitable GPU!");
+  }
+}
+
+void Window::createLogicalDevice() {
+  QueueFamilyIndices indices = this->findQueueFamilies(this->physicalDevice);
+
+  VkDeviceQueueCreateInfo queueCreateInfo{};
+  queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+  queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+  queueCreateInfo.queueCount = 1;
+  float queuePriority = 1.0;
+  queueCreateInfo.pQueuePriorities = &queuePriority;
+
+  VkPhysicalDeviceFeatures deviceFeatures{};
+
+  VkDeviceCreateInfo createInfo{};
+  createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+  createInfo.pQueueCreateInfos = &queueCreateInfo;
+  createInfo.queueCreateInfoCount = 1;
+  createInfo.pEnabledFeatures = &deviceFeatures;
+  createInfo.enabledExtensionCount = 0;
+
+  if(this->enableValidationLayers) {
+    createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+    createInfo.ppEnabledLayerNames = validationLayers.data();
+  } else {
+    createInfo.enabledLayerCount = 0;
+  }
+
+  if(vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
+    throw std::runtime_error("Failed to create logical device!");
+  }
+
+  vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
+}
+
+/*
+  -------------------------------
+  Initialization helper functions
+  -------------------------------
+*/
+
+
+bool Window::isDeviceSuitable(VkPhysicalDevice device) {
+  QueueFamilyIndices indices = findQueueFamilies(device);
+  return indices.isComplete();
+}
+
+QueueFamilyIndices Window::findQueueFamilies(VkPhysicalDevice device) {
+  QueueFamilyIndices indices;
+
+  uint32_t queueFamilyCount = 0;
+  vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+  std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+  vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+  int i=0;
+  for(const auto& queueFamily : queueFamilies) {
+    if(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+      indices.graphicsFamily = i;
+    }
+
+    if(indices.isComplete()) {
+      break;
+    }
+
+    i++;
+  }
+
+  return indices;
 }
 
 void Window::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
