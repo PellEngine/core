@@ -2,16 +2,17 @@
 #define _PELLENGINE_WINDOW_WINDOW_H_
 
 #include <pellengine/vulkan/vulkan_wrapper.h>
+#include <pellengine/io/logger.h>
 #include <string>
 #include <vector>
 #include <optional>
 #include <set>
-#include <android/log.h>
 #include <cstdint>
 #include <algorithm>
 
 #ifdef ANDROID
   #include <android/native_activity.h>
+  #include <android/log.h>
 #endif
 
 namespace pellengine {
@@ -46,6 +47,22 @@ class Window {
     return initialized;
   }
 
+  VkDevice getDevice() {
+    return device;
+  }
+
+  VkExtent2D getSwapChainExtent() {
+    return swapChainExtent;
+  }
+
+  VkFormat getSwapChainImageFormat() {
+    return swapChainImageFormat;
+  }
+
+  std::vector<VkImageView>& getSwapChainImageViews() {
+    return swapChainImageViews;
+  }
+
   #ifdef ANDROID
     void setAndroidPlatformWindow(ANativeWindow* androidPlatformWindow) {
       this->androidPlatformWindow = androidPlatformWindow;
@@ -63,6 +80,10 @@ class Window {
   VkDebugUtilsMessengerEXT debugMessenger;
   VkSurfaceKHR surface;
   VkSwapchainKHR swapChain;
+  std::vector<VkImage> swapChainImages;
+  VkFormat swapChainImageFormat;
+  VkExtent2D swapChainExtent;
+  std::vector<VkImageView> swapChainImageViews;
 
   VkQueue graphicsQueue;
   VkQueue presentQueue;
@@ -77,6 +98,7 @@ class Window {
   void pickPhysicalDevice();
   void createLogicalDevice();
   void createSwapChain();
+  void createImageViews();
 
   void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
   bool checkValidationLayerSupport();

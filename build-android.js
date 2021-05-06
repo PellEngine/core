@@ -34,7 +34,7 @@ function exec(cmd) {
 }
 
 const clean = () => {
-  const buildDir = path.join(directory, 'build');
+  const buildDir = path.join(directory, 'build', 'android');
   if(fs.existsSync(buildDir)) fs.rmdirSync(buildDir, { recursive: true });
 };
 

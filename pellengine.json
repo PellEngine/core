@@ -1,9 +1,18 @@
 {
   "name": "pellengine",
   "src": [
-    "src/pellengine/window/window.cpp"
+    "src/pellengine/graphics/window.cpp",
+    "src/pellengine/graphics/pipeline.cpp",
+    "src/pellengine/graphics/framebuffer.cpp",
+    "src/pellengine/graphics/renderpass.cpp",
+    "src/pellengine/io/asset_reader.cpp",
+    "src/pellengine/io/logger.cpp"
   ],
   "androidSrc": [
     "src/pellengine/vulkan/vulkan_android_wrapper.cpp"
+  ],
+  "shaders": [
+    "shaders/test.vert",
+    "shaders/test.frag"
   ]
 }

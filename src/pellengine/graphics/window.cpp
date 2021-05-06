@@ -8,8 +8,8 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
   VkDebugUtilsMessageTypeFlagsEXT messageType,
   const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
   void* pUserData) {
-
-  std::cerr << "Validation layer: " << pCallbackData->pMessage << std::endl;
+  
+  Logger::vprintln(ERROR, "Validation layer: %s", pCallbackData->pMessage);
   return VK_FALSE;
 }
 
@@ -65,11 +65,16 @@ void Window::initialize() {
   pickPhysicalDevice();
   createLogicalDevice();
   createSwapChain();
+  createImageViews();
 
   this->initialized = true;
 }
 
 void Window::terminate() {
+  for(auto imageView : swapChainImageViews) {
+    vkDestroyImageView(device, imageView, nullptr);
+  }
+
   vkDestroySwapchainKHR(device, swapChain, nullptr);
   vkDestroyDevice(device, nullptr);
 
@@ -158,6 +163,7 @@ void Window::createInstance() {
   if(enableValidationLayers) {
     createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
     createInfo.ppEnabledLayerNames = validationLayers.data();
+    populateDebugMessengerCreateInfo(debugCreateInfo);  
     createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
   } else {
     createInfo.enabledLayerCount = 0;
@@ -173,9 +179,10 @@ void Window::setupDebugMessenger() {
   if(!this->enableValidationLayers) return;
   VkDebugUtilsMessengerCreateInfoEXT createInfo;
   this->populateDebugMessengerCreateInfo(createInfo);
-  if(CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
-    throw std::runtime_error("Failed to set up debug messenger");
-  }
+
+  // if(CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
+  //   throw std::runtime_error("Failed to set up debug messenger");
+  // }
 }
 
 void Window::createSurface() {
@@ -294,7 +301,7 @@ void Window::createSwapChain() {
   }
 
   createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
-  createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+  createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
   createInfo.presentMode = presentMode;
   createInfo.clipped = VK_TRUE;
 
@@ -302,6 +309,42 @@ void Window::createSwapChain() {
 
   if(vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapChain) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create swap chain");
+  }
+
+  vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
+
+  swapChainImages.resize(imageCount);
+  vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
+
+  swapChainImageFormat = surfaceFormat.format;
+  swapChainExtent = extent;
+}
+
+void Window::createImageViews() {
+  swapChainImageViews.resize(swapChainImages.size());
+
+  for(size_t i=0;i<swapChainImages.size();i++) {
+    VkImageViewCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    createInfo.image = swapChainImages[i];
+    
+    createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    createInfo.format = swapChainImageFormat;
+
+    createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+    createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+    createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+    createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+    createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    createInfo.subresourceRange.baseMipLevel = 0;
+    createInfo.subresourceRange.levelCount = 1;
+    createInfo.subresourceRange.baseArrayLayer = 0;
+    createInfo.subresourceRange.layerCount = 1;
+
+    if(vkCreateImageView(device, &createInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
+      throw std::runtime_error("Failed to create image views.");
+    }
   }
 }
 
