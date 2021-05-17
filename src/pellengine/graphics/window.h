@@ -1,30 +1,12 @@
-#ifndef _PELLENGINE_WINDOW_WINDOW_H_
-#define _PELLENGINE_WINDOW_WINDOW_H_
+#ifndef _PELLENGINE_GRAPHICS_WINDOW_H_
+#define _PELLENGINE_GRAPHICS_WINDOW_H_
 
 #include <pellengine/vulkan/vulkan_wrapper.h>
-#include <pellengine/io/logger.h>
+#include <pellengine/graphics/instance.h>
 #include <string>
 #include <vector>
-#include <optional>
-#include <set>
-#include <cstdint>
-#include <algorithm>
-
-#ifdef ANDROID
-  #include <android/native_activity.h>
-  #include <android/log.h>
-#endif
 
 namespace pellengine {
-
-struct QueueFamilyIndices {
-  std::optional<uint32_t> graphicsFamily;
-  std::optional<uint32_t> presentFamily;
-
-  bool isComplete() {
-    return graphicsFamily.has_value() && presentFamily.has_value();
-  }
-};
 
 struct SwapChainSupportDetails {
   VkSurfaceCapabilitiesKHR capabilities;
@@ -32,87 +14,81 @@ struct SwapChainSupportDetails {
   std::vector<VkPresentModeKHR> presentModes;
 };
 
+const int MAX_FRAMES_IN_FLIGHT = 3;
+
 class Window {
  public:
-  Window(std::string name, bool enableValidationLayers);
+  Window(const std::string name, bool enableValidationLayers);
   ~Window();
 
   Window(const Window&) = delete;
-  Window &operator=(const Window&) = delete;
+  Window& operator=(const Window&) = delete;
 
   void initialize();
   void terminate();
 
-  bool isInitialized() {
-    return initialized;
+  std::vector<VkImageView>& getSwapChainImageViews() {
+    return swapChainImageViews;
   }
 
-  VkDevice getDevice() {
-    return device;
+  std::vector<VkImage>& getSwapChainImages() {
+    return swapChainImages;
   }
 
   VkExtent2D getSwapChainExtent() {
     return swapChainExtent;
   }
 
-  VkFormat getSwapChainImageFormat() {
-    return swapChainImageFormat;
+  VkCommandPool getCommandPool() {
+    return commandPool;
   }
 
-  std::vector<VkImageView>& getSwapChainImageViews() {
-    return swapChainImageViews;
+  VkRenderPass getRenderPass() {
+    return renderPass;
   }
 
-  #ifdef ANDROID
-    void setAndroidPlatformWindow(ANativeWindow* androidPlatformWindow) {
-      this->androidPlatformWindow = androidPlatformWindow;
-    }
-  #endif
+  VkSwapchainKHR getSwapchain() {
+    return swapChain;
+  }
+
+  std::vector<VkFramebuffer>& getSwapChainFrameBuffers() {
+    return swapChainFrameBuffers;
+  }
+
+  Instance* getInstance() {
+    return instance;
+  }
+
+  bool isInitialized() {
+    return initialized;
+  }
 
  private:
-  std::string name;
-  bool initialized;
-  bool enableValidationLayers;
+  Instance* instance;
 
-  VkInstance instance;
-  VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-  VkDevice device;
-  VkDebugUtilsMessengerEXT debugMessenger;
-  VkSurfaceKHR surface;
   VkSwapchainKHR swapChain;
   std::vector<VkImage> swapChainImages;
   VkFormat swapChainImageFormat;
   VkExtent2D swapChainExtent;
   std::vector<VkImageView> swapChainImageViews;
 
-  VkQueue graphicsQueue;
-  VkQueue presentQueue;
+  VkRenderPass renderPass;
+  std::vector<VkFramebuffer> swapChainFrameBuffers;
+  VkCommandPool commandPool;
 
-  #ifdef ANDROID
-    ANativeWindow* androidPlatformWindow;
-  #endif
-
-  void createInstance();
-  void setupDebugMessenger();
-  void createSurface();
-  void pickPhysicalDevice();
-  void createLogicalDevice();
   void createSwapChain();
   void createImageViews();
+  void createRenderPass();
+  void createFramebuffers();
+  void createCommandPool();
 
-  void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
-  bool checkValidationLayerSupport();
-  bool checkDeviceExtensionSupport(VkPhysicalDevice device);
-  bool isDeviceSuitable(VkPhysicalDevice device);
-  QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
-  SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+  bool initialized;
+  bool enableValidationLayers;
 
+  SwapChainSupportDetails querySwapChainSupport(Instance* instance);
   VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-  VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentMode);
+  VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
   VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-
-  const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
-  const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 };
 
 }

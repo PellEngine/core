@@ -1,8 +1,8 @@
-#include "pipeline.h"
+#include "graphics_pipeline.h"
 
 namespace pellengine {
 
-GraphicsPipeline::GraphicsPipeline(Window& window, RenderPass& renderPass, ShaderConfiguration shaderConfiguration) : shaderConfiguration(shaderConfiguration), renderPass(renderPass), window(window) {}
+GraphicsPipeline::GraphicsPipeline(Window& window, ShaderConfiguration shaderConfiguration) : window(window), shaderConfiguration(shaderConfiguration) {}
 
 GraphicsPipeline::~GraphicsPipeline() {
   terminate();
@@ -122,7 +122,7 @@ void GraphicsPipeline::initialize() {
   colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
   colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
   colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-  colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD; 
+  colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
   VkPipelineColorBlendStateCreateInfo colorBlending{};
   colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -135,8 +135,7 @@ void GraphicsPipeline::initialize() {
   colorBlending.blendConstants[2] = 0.0f;
   colorBlending.blendConstants[3] = 0.0f;
 
-
-  // Create pipeline
+  // Create pipeline layout
   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
   pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   pipelineLayoutCreateInfo.setLayoutCount = 0;
@@ -144,14 +143,13 @@ void GraphicsPipeline::initialize() {
   pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
   pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 
-  if(vkCreatePipelineLayout(window.getDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+  if(vkCreatePipelineLayout(window.getInstance()->getDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create pipeline layout");
   }
 
-  // Create the pipeline
+  // Create pipeline
   VkGraphicsPipelineCreateInfo pipelineInfo{};
   pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-  // pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
   pipelineInfo.stageCount = shaderStages.size();
   pipelineInfo.pStages = shaderStages.data();
 
@@ -165,26 +163,26 @@ void GraphicsPipeline::initialize() {
   pipelineInfo.pDynamicState = nullptr;
 
   pipelineInfo.layout = pipelineLayout;
-  pipelineInfo.renderPass = renderPass.getVkRenderPass();
+  pipelineInfo.renderPass = window.getRenderPass();
   pipelineInfo.subpass = 0;
 
   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
   pipelineInfo.basePipelineIndex = -1;
 
-  if(vkCreateGraphicsPipelines(window.getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+  if(vkCreateGraphicsPipelines(window.getInstance()->getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create graphics pipeline");
   }
 
   if(shaderConfiguration.vertexShader.has_value())
-    vkDestroyShaderModule(window.getDevice(), fragmentShaderModule, nullptr);
+    vkDestroyShaderModule(window.getInstance()->getDevice(), fragmentShaderModule, nullptr);
 
   if(shaderConfiguration.fragmentShader.has_value())
-    vkDestroyShaderModule(window.getDevice(), vertexShaderModule, nullptr);
+    vkDestroyShaderModule(window.getInstance()->getDevice(), vertexShaderModule, nullptr);
 }
 
 void GraphicsPipeline::terminate() {
-  vkDestroyPipeline(window.getDevice(), graphicsPipeline, nullptr);
-  vkDestroyPipelineLayout(window.getDevice(), pipelineLayout, nullptr);
+  vkDestroyPipeline(window.getInstance()->getDevice(), pipeline, nullptr);
+  vkDestroyPipelineLayout(window.getInstance()->getDevice(), pipelineLayout, nullptr);
 }
 
 void GraphicsPipeline::createShaderModule(std::vector<char>& code, VkShaderModule* shaderModule) {
@@ -195,9 +193,10 @@ void GraphicsPipeline::createShaderModule(std::vector<char>& code, VkShaderModul
   createInfo.codeSize = code.size();
   createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
-  if(vkCreateShaderModule(window.getDevice(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
+  if(vkCreateShaderModule(window.getInstance()->getDevice(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create shader module");
   }
+
 }
 
 }

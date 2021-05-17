@@ -2,9 +2,10 @@
   "name": "pellengine",
   "src": [
     "src/pellengine/graphics/window.cpp",
-    "src/pellengine/graphics/pipeline.cpp",
-    "src/pellengine/graphics/framebuffer.cpp",
-    "src/pellengine/graphics/renderpass.cpp",
+    "src/pellengine/graphics/instance.cpp",
+    "src/pellengine/graphics/command_buffer.cpp",
+    "src/pellengine/graphics/graphics_pipeline.cpp",
+    "src/pellengine/graphics/renderer.cpp",
     "src/pellengine/io/asset_reader.cpp",
     "src/pellengine/io/logger.cpp"
   ],
