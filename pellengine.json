@@ -6,6 +6,7 @@
     "src/pellengine/graphics/command_buffer.cpp",
     "src/pellengine/graphics/graphics_pipeline.cpp",
     "src/pellengine/graphics/renderer.cpp",
+    "src/pellengine/graphics/swapchain_recreator.cpp",
     "src/pellengine/io/asset_reader.cpp",
     "src/pellengine/io/logger.cpp"
   ],

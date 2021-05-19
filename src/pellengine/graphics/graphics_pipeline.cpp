@@ -2,7 +2,7 @@
 
 namespace pellengine {
 
-GraphicsPipeline::GraphicsPipeline(Window& window, ShaderConfiguration shaderConfiguration) : window(window), shaderConfiguration(shaderConfiguration) {}
+GraphicsPipeline::GraphicsPipeline(std::shared_ptr<Window> window, ShaderConfiguration shaderConfiguration) : window(window), shaderConfiguration(shaderConfiguration) {}
 
 GraphicsPipeline::~GraphicsPipeline() {
   terminate();
@@ -70,15 +70,15 @@ void GraphicsPipeline::initialize() {
   VkViewport viewport{};
   viewport.x = 0;
   viewport.y = 0;
-  viewport.width = window.getSwapChainExtent().width;
-  viewport.height = window.getSwapChainExtent().height;
+  viewport.width = window->getSwapChainExtent().width;
+  viewport.height = window->getSwapChainExtent().height;
   viewport.minDepth = 0;
   viewport.maxDepth = 1;
 
   // Setup viewport scissors
   VkRect2D scissor{};
   scissor.offset = {0, 0};
-  scissor.extent = window.getSwapChainExtent();
+  scissor.extent = window->getSwapChainExtent();
 
   // Setup viewport state
   VkPipelineViewportStateCreateInfo viewportState{};
@@ -143,7 +143,7 @@ void GraphicsPipeline::initialize() {
   pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
   pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 
-  if(vkCreatePipelineLayout(window.getInstance()->getDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+  if(vkCreatePipelineLayout(window->getInstance()->getDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create pipeline layout");
   }
 
@@ -163,26 +163,26 @@ void GraphicsPipeline::initialize() {
   pipelineInfo.pDynamicState = nullptr;
 
   pipelineInfo.layout = pipelineLayout;
-  pipelineInfo.renderPass = window.getRenderPass();
+  pipelineInfo.renderPass = window->getRenderPass();
   pipelineInfo.subpass = 0;
 
   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
   pipelineInfo.basePipelineIndex = -1;
 
-  if(vkCreateGraphicsPipelines(window.getInstance()->getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS) {
+  if(vkCreateGraphicsPipelines(window->getInstance()->getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create graphics pipeline");
   }
 
   if(shaderConfiguration.vertexShader.has_value())
-    vkDestroyShaderModule(window.getInstance()->getDevice(), fragmentShaderModule, nullptr);
+    vkDestroyShaderModule(window->getInstance()->getDevice(), fragmentShaderModule, nullptr);
 
   if(shaderConfiguration.fragmentShader.has_value())
-    vkDestroyShaderModule(window.getInstance()->getDevice(), vertexShaderModule, nullptr);
+    vkDestroyShaderModule(window->getInstance()->getDevice(), vertexShaderModule, nullptr);
 }
 
 void GraphicsPipeline::terminate() {
-  vkDestroyPipeline(window.getInstance()->getDevice(), pipeline, nullptr);
-  vkDestroyPipelineLayout(window.getInstance()->getDevice(), pipelineLayout, nullptr);
+  vkDestroyPipeline(window->getInstance()->getDevice(), pipeline, nullptr);
+  vkDestroyPipelineLayout(window->getInstance()->getDevice(), pipelineLayout, nullptr);
 }
 
 void GraphicsPipeline::createShaderModule(std::vector<char>& code, VkShaderModule* shaderModule) {
@@ -193,7 +193,7 @@ void GraphicsPipeline::createShaderModule(std::vector<char>& code, VkShaderModul
   createInfo.codeSize = code.size();
   createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
-  if(vkCreateShaderModule(window.getInstance()->getDevice(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
+  if(vkCreateShaderModule(window->getInstance()->getDevice(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create shader module");
   }
 

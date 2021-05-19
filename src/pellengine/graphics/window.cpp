@@ -29,21 +29,9 @@ void Window::initialize() {
 }
 
 void Window::terminate() {
+  terminateSwapChain();
   vkDestroyCommandPool(instance->getDevice(), commandPool, nullptr);
-
-  for(auto framebuffer : swapChainFrameBuffers) {
-    vkDestroyFramebuffer(instance->getDevice(), framebuffer, nullptr);
-  }
-
-  vkDestroyRenderPass(instance->getDevice(), renderPass, nullptr);
-
- for(auto imageView : swapChainImageViews) {
-    vkDestroyImageView(instance->getDevice(), imageView, nullptr);
-  }
-
-  vkDestroySwapchainKHR(instance->getDevice(), swapChain, nullptr);
   instance->terminate();
-  
   initialized = false;
 }
 
@@ -215,6 +203,29 @@ void Window::createCommandPool() {
   if(vkCreateCommandPool(instance->getDevice(), &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create command pool.");
   }
+}
+
+void Window::recreateSwapChain() {
+  vkDeviceWaitIdle(instance->getDevice());
+
+  createSwapChain();
+  createImageViews();
+  createRenderPass();
+  createFramebuffers();
+}
+
+void Window::terminateSwapChain() {
+  for(auto framebuffer : swapChainFrameBuffers) {
+    vkDestroyFramebuffer(instance->getDevice(), framebuffer, nullptr);
+  }
+
+  vkDestroyRenderPass(instance->getDevice(), renderPass, nullptr);
+
+ for(auto imageView : swapChainImageViews) {
+    vkDestroyImageView(instance->getDevice(), imageView, nullptr);
+  }
+
+  vkDestroySwapchainKHR(instance->getDevice(), swapChain, nullptr);
 }
 
 /*

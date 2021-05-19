@@ -6,6 +6,7 @@
 #include <pellengine/io/asset_reader.h>
 #include <string>
 #include <optional>
+#include <memory>
 
 namespace pellengine {
 
@@ -25,7 +26,7 @@ struct ShaderConfiguration {
 
 class GraphicsPipeline {
  public:
-  GraphicsPipeline(Window& window, ShaderConfiguration shaderConfiguration);
+  GraphicsPipeline(std::shared_ptr<Window> window, ShaderConfiguration shaderConfiguration);
   ~GraphicsPipeline();
 
   GraphicsPipeline(const GraphicsPipeline&) = delete;
@@ -40,7 +41,7 @@ class GraphicsPipeline {
 
  private:
   ShaderConfiguration shaderConfiguration;
-  Window& window;
+  std::shared_ptr<Window> window;
   VkPipelineLayout pipelineLayout;
   VkPipeline pipeline;
 

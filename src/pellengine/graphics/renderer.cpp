@@ -2,7 +2,7 @@
 
 namespace pellengine {
 
-Renderer::Renderer(Window& window) : window(window) {}
+Renderer::Renderer(std::shared_ptr<Window> window) : window(window) {}
 
 Renderer::~Renderer() {
   terminate();
@@ -12,7 +12,7 @@ void Renderer::initialize() {
   imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
   renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
   inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-  imagesInFlight.resize(window.getSwapChainImages().size(), VK_NULL_HANDLE);
+  imagesInFlight.resize(window->getSwapChainImages().size(), VK_NULL_HANDLE);
 
   VkSemaphoreCreateInfo semaphoreInfo{};
   semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -23,9 +23,9 @@ void Renderer::initialize() {
 
   for(size_t i=0;i<MAX_FRAMES_IN_FLIGHT;i++) {
     if(
-      vkCreateSemaphore(window.getInstance()->getDevice(), &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS || 
-      vkCreateSemaphore(window.getInstance()->getDevice(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-      vkCreateFence(window.getInstance()->getDevice(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS
+      vkCreateSemaphore(window->getInstance()->getDevice(), &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS || 
+      vkCreateSemaphore(window->getInstance()->getDevice(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
+      vkCreateFence(window->getInstance()->getDevice(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS
     ) {
       throw std::runtime_error("failed to create semaphores!");
     }
@@ -34,24 +34,34 @@ void Renderer::initialize() {
 
 void Renderer::terminate() {
   for(size_t i=0;i<MAX_FRAMES_IN_FLIGHT;i++) {
-    vkDestroySemaphore(window.getInstance()->getDevice(), imageAvailableSemaphores[i], nullptr);
-    vkDestroySemaphore(window.getInstance()->getDevice(), renderFinishedSemaphores[i], nullptr);
-    vkDestroyFence(window.getInstance()->getDevice(), inFlightFences[i], nullptr);
+    vkDestroySemaphore(window->getInstance()->getDevice(), imageAvailableSemaphores[i], nullptr);
+    vkDestroySemaphore(window->getInstance()->getDevice(), renderFinishedSemaphores[i], nullptr);
+    vkDestroyFence(window->getInstance()->getDevice(), inFlightFences[i], nullptr);
   }
 }
 
-void Renderer::draw(Window& window, CommandBuffer& commandBuffer, size_t commandBuffersSize) {
-  vkWaitForFences(window.getInstance()->getDevice(), 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-
+uint32_t Renderer::begin() {
+  vkWaitForFences(window->getInstance()->getDevice(), 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
   uint32_t imageIndex;
-  vkAcquireNextImageKHR(window.getInstance()->getDevice(), window.getSwapchain(), UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+  VkResult result = vkAcquireNextImageKHR(window->getInstance()->getDevice(), window->getSwapchain(), UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+  if(result == VK_ERROR_OUT_OF_DATE_KHR) {
+    SwapChainRecreator::recreate();
+    return imageIndex;
+  } else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+    throw std::runtime_error("Failed to acquire swap chain image.");
+  }
 
   if(imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
-    vkWaitForFences(window.getInstance()->getDevice(), 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+    vkWaitForFences(window->getInstance()->getDevice(), 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
   }
 
   imagesInFlight[imageIndex] = inFlightFences[currentFrame];
 
+  return imageIndex;
+}
+
+void Renderer::end(uint32_t imageIndex, CommandBuffer* commandBuffer, size_t commandBuffersSize, bool windowResized) {
   VkSubmitInfo submitInfo{};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -61,7 +71,7 @@ void Renderer::draw(Window& window, CommandBuffer& commandBuffer, size_t command
   submitInfo.pWaitSemaphores = waitSemaphores;
   submitInfo.pWaitDstStageMask = waitStages;
   submitInfo.commandBufferCount = static_cast<uint32_t>(commandBuffersSize);
-  submitInfo.pCommandBuffers = &commandBuffer.getCommandBuffers()[imageIndex];
+  submitInfo.pCommandBuffers = &commandBuffer->getCommandBuffers()[imageIndex];
   // std::vector<VkCommandBuffer> vkCommandBuffers(commandBuffersSize);
   // for(size_t i=0;i<commandBuffersSize;i++) {
   //   vkCommandBuffers.push_back(commandBuffer.getCommandBuffers()[imageIndex]);
@@ -72,9 +82,9 @@ void Renderer::draw(Window& window, CommandBuffer& commandBuffer, size_t command
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores = signalSemaphores;
 
-  vkResetFences(window.getInstance()->getDevice(), 1, &inFlightFences[currentFrame]);
+  vkResetFences(window->getInstance()->getDevice(), 1, &inFlightFences[currentFrame]);
 
-  if(vkQueueSubmit(window.getInstance()->getGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
+  if(vkQueueSubmit(window->getInstance()->getGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
     throw std::runtime_error("Failed to submit draw command buffer");
   }
 
@@ -83,14 +93,18 @@ void Renderer::draw(Window& window, CommandBuffer& commandBuffer, size_t command
   presentInfo.waitSemaphoreCount = 1;
   presentInfo.pWaitSemaphores = signalSemaphores;
 
-  VkSwapchainKHR swapChains[] = {window.getSwapchain()};
+  VkSwapchainKHR swapChains[] = {window->getSwapchain()};
   presentInfo.swapchainCount = 1;
   presentInfo.pSwapchains = swapChains;
   presentInfo.pImageIndices = &imageIndex;
   presentInfo.pResults = nullptr;
 
-  vkQueuePresentKHR(window.getInstance()->getPresentQueue(), &presentInfo);
-  vkQueueWaitIdle(window.getInstance()->getPresentQueue());
+  VkResult result = vkQueuePresentKHR(window->getInstance()->getPresentQueue(), &presentInfo);
+  if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || windowResized) {
+    SwapChainRecreator::recreate();
+  } else if(result != VK_SUCCESS) {
+    throw std::runtime_error("Failed to present swap chain image.");
+  }
 
   currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
