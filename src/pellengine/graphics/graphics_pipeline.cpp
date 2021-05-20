@@ -9,6 +9,8 @@ GraphicsPipeline::~GraphicsPipeline() {
 }
 
 void GraphicsPipeline::initialize() {
+  if(initialized) return;
+
   size_t vertexShaderSize;
   size_t fragmentShaderSize;
 
@@ -178,11 +180,15 @@ void GraphicsPipeline::initialize() {
 
   if(shaderConfiguration.fragmentShader.has_value())
     vkDestroyShaderModule(window->getInstance()->getDevice(), vertexShaderModule, nullptr);
+
+  initialized = true;
 }
 
 void GraphicsPipeline::terminate() {
+  if(!initialized) return;
   vkDestroyPipeline(window->getInstance()->getDevice(), pipeline, nullptr);
   vkDestroyPipelineLayout(window->getInstance()->getDevice(), pipelineLayout, nullptr);
+  initialized = false;
 }
 
 void GraphicsPipeline::createShaderModule(std::vector<char>& code, VkShaderModule* shaderModule) {

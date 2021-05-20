@@ -23,6 +23,7 @@ class Renderer {
   void end(uint32_t imageIndex, CommandBuffer* commandBuffer, size_t commandBuffersSize, bool windowResized);
 
  private:
+  bool initialized = false;
   size_t currentFrame = 0;
   std::shared_ptr<Window> window;
   std::vector<VkSemaphore> imageAvailableSemaphores;

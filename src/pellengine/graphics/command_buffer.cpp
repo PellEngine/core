@@ -7,6 +7,8 @@ CommandBuffer::CommandBuffer(std::shared_ptr<Window> window, PipelineConfigurati
 CommandBuffer::~CommandBuffer() {}
 
 void CommandBuffer::initialize() {
+  if(initialized) return;
+
   commandBuffers.resize(window->getSwapChainImageViews().size());
   VkCommandBufferAllocateInfo allocInfo{};
   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -17,10 +19,14 @@ void CommandBuffer::initialize() {
   if(vkAllocateCommandBuffers(window->getInstance()->getDevice(), &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create command buffers.");
   }
+
+  initialized = true;
 }
 
 void CommandBuffer::terminate() {
+  if(!initialized) return;
   vkFreeCommandBuffers(window->getInstance()->getDevice(), window->getCommandPool(), static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+  initialized = false;
 }
 
 void CommandBuffer::recordAll() {

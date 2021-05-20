@@ -38,6 +38,9 @@ class CommandBuffer {
     return commandBuffers;
   }
 
+ private:
+  bool initialized = false;
+
  protected:
   std::shared_ptr<Window> window;
   PipelineConfiguration pipelineConfiguration;

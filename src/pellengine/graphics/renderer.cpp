@@ -9,6 +9,8 @@ Renderer::~Renderer() {
 }
 
 void Renderer::initialize() {
+  if(initialized) return;
+
   imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
   renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
   inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -29,15 +31,21 @@ void Renderer::initialize() {
     ) {
       throw std::runtime_error("failed to create semaphores!");
     }
-  } 
+  }
+
+  initialized = false;
 }
 
 void Renderer::terminate() {
+  if(!initialized) return;
+
   for(size_t i=0;i<MAX_FRAMES_IN_FLIGHT;i++) {
     vkDestroySemaphore(window->getInstance()->getDevice(), imageAvailableSemaphores[i], nullptr);
     vkDestroySemaphore(window->getInstance()->getDevice(), renderFinishedSemaphores[i], nullptr);
     vkDestroyFence(window->getInstance()->getDevice(), inFlightFences[i], nullptr);
   }
+
+  initialized = false;
 }
 
 uint32_t Renderer::begin() {

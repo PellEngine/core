@@ -40,6 +40,7 @@ class GraphicsPipeline {
   }
 
  private:
+  bool initialized = false;;
   ShaderConfiguration shaderConfiguration;
   std::shared_ptr<Window> window;
   VkPipelineLayout pipelineLayout;
