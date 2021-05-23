@@ -24,9 +24,14 @@ struct ShaderConfiguration {
   }
 };
 
+struct VertexConfiguration {
+  std::vector<VkVertexInputBindingDescription> bindingDescriptions;
+  std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+};
+
 class GraphicsPipeline {
  public:
-  GraphicsPipeline(std::shared_ptr<Window> window, ShaderConfiguration shaderConfiguration);
+  GraphicsPipeline(std::shared_ptr<Window> window, ShaderConfiguration shaderConfiguration, VertexConfiguration vertexConfiguration);
   ~GraphicsPipeline();
 
   GraphicsPipeline(const GraphicsPipeline&) = delete;
@@ -42,9 +47,13 @@ class GraphicsPipeline {
  private:
   bool initialized = false;;
   ShaderConfiguration shaderConfiguration;
+  VertexConfiguration vertexConfiguration;
   std::shared_ptr<Window> window;
   VkPipelineLayout pipelineLayout;
   VkPipeline pipeline;
+
+  std::shared_ptr<std::vector<VkVertexInputBindingDescription>> bindingDescriptions;
+  std::shared_ptr<std::vector<VkVertexInputAttributeDescription>> attributeDescriptions;
 
   void createShaderModule(std::vector<char>& code, VkShaderModule* shaderModule);
 };

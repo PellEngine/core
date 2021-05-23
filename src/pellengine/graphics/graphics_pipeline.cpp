@@ -2,7 +2,7 @@
 
 namespace pellengine {
 
-GraphicsPipeline::GraphicsPipeline(std::shared_ptr<Window> window, ShaderConfiguration shaderConfiguration) : window(window), shaderConfiguration(shaderConfiguration) {}
+GraphicsPipeline::GraphicsPipeline(std::shared_ptr<Window> window, ShaderConfiguration shaderConfiguration, VertexConfiguration vertexConfiguration) : shaderConfiguration(shaderConfiguration), vertexConfiguration(vertexConfiguration), window(window) {}
 
 GraphicsPipeline::~GraphicsPipeline() {
   terminate();
@@ -57,10 +57,10 @@ void GraphicsPipeline::initialize() {
   // Setup the pipeline fixed functions
   VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
   vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-  vertexInputInfo.vertexBindingDescriptionCount = 0;
-  vertexInputInfo.pVertexAttributeDescriptions = nullptr;
-  vertexInputInfo.vertexAttributeDescriptionCount = 0;
-  vertexInputInfo.pVertexAttributeDescriptions = nullptr;
+  vertexInputInfo.vertexBindingDescriptionCount = vertexConfiguration.bindingDescriptions.size();
+  vertexInputInfo.pVertexBindingDescriptions = vertexConfiguration.bindingDescriptions.data();
+  vertexInputInfo.vertexAttributeDescriptionCount = vertexConfiguration.attributeDescriptions.size();
+  vertexInputInfo.pVertexAttributeDescriptions = vertexConfiguration.attributeDescriptions.data();
 
   // Setup input assembly
   VkPipelineInputAssemblyStateCreateInfo inputAssembly{};

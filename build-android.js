@@ -88,6 +88,7 @@ const buildLib = async () => {
     `-I${path.join(ndk, 'sysroot', 'usr', 'include', 'android').toString()}`,
     `-I${path.join(ndk, 'toolchains', 'llvm', 'prebuilt', osName, 'sysroot', 'usr', 'include', 'android').toString()}`,
     `-I${path.join(directory, 'src').toString()}`,
+    `-I${path.join(directory, 'src', 'glm').toString()}`,
     '-c',
     '-D DEBUG',
     '-D PLATFORM="ANDROID"',
