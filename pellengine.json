@@ -1,6 +1,7 @@
 {
   "name": "pellengine",
   "src": [
+    "src/pellengine/ecs/entity_manager.cpp",
     "src/pellengine/graphics/window.cpp",
     "src/pellengine/graphics/instance.cpp",
     "src/pellengine/graphics/command_buffer.cpp",
@@ -9,7 +10,8 @@
     "src/pellengine/graphics/swapchain_recreator.cpp",
     "src/pellengine/graphics/vertex_buffer.cpp",
     "src/pellengine/io/asset_reader.cpp",
-    "src/pellengine/io/logger.cpp"
+    "src/pellengine/io/logger.cpp",
+    "src/pellengine/systems/sprite_batch.cpp"
   ],
   "androidSrc": [
     "src/pellengine/vulkan/vulkan_android_wrapper.cpp"
