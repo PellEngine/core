@@ -1,27 +1,22 @@
 #ifndef _PELLENGINE_ECS_COMPONENT_ARRAY_H_
 #define _PELLENGINE_ECS_COMPONENT_ARRAY_H_
 
-#include <pellengine/ecs/entity.h>
 #include <array>
 #include <unordered_map>
+#include "types.h"
 
 namespace pellengine {
 
-class IComponentArray {
+class ComponentArrayBase {
  public:
-  virtual ~IComponentArray() = default;
+  virtual ~ComponentArrayBase() = default;
   virtual void entityDestroyed(Entity entity) = 0;
 };
 
 template<typename T>
-class ComponentArray : public IComponentArray {
+class ComponentArray : public ComponentArrayBase {
  public:
-  ComponentArray(const ComponentArray&) = delete;
-  ComponentArray& operator=(const ComponentArray&) = delete;
-
   void insertData(Entity entity, T component) {
-    assert(entityToIndexMap.find(entity) == entityToIndexMap.end() && "Component added more than once.");
-
     size_t newIndex = size;
     entityToIndexMap[entity] = newIndex;
     indexToEntityMap[newIndex] = entity;
@@ -30,14 +25,10 @@ class ComponentArray : public IComponentArray {
   }
 
   void removeData(Entity entity) {
-    assert(entityToIndexMap.find(entity) != entityToIndexMap.end() && "Removing component that doesnt exists.");
-
-    // Copy element from last index to deleted elements index
     size_t removedEntityIndex = entityToIndexMap[entity];
     size_t lastElementIndex = size - 1;
     componentArray[removedEntityIndex] = componentArray[lastElementIndex];
 
-    // Update mappings
     Entity lastEntity = indexToEntityMap[lastElementIndex];
     entityToIndexMap[lastEntity] = removedEntityIndex;
     indexToEntityMap[removedEntityIndex] = lastEntity;
@@ -49,7 +40,6 @@ class ComponentArray : public IComponentArray {
   }
 
   T& getData(Entity entity) {
-    assert(entityToIndexMap.find(entity) != entityToIndexMap.end() && "Component doesn't exists");
     return componentArray[entityToIndexMap[entity]];
   }
 

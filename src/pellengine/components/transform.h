@@ -1,7 +1,7 @@
 #ifndef _PELLENGINE_COMPONENTS_TRANSFORM_H_
 #define _PELLENGINE_COMPONENTS_TRANSFORM_H_
 
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
 
 namespace pellengine {
 

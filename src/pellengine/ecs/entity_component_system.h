@@ -1,23 +1,60 @@
 #ifndef _PELLENGINE_ECS_ENTITY_COMPONENT_SYSTEM_H_
 #define _PELLENGINE_ECS_ENTITY_COMPONENT_SYSTEM_H_
 
-#include <pellengine/ecs/component_manager.h>
-#include <pellengine/ecs/entity_manager.h>
-#include <pellengine/ecs/system.h>
-#include <pellengine/ecs/entity.h>
+#include <unordered_map>
+#include <vector>
 #include <memory>
+#include "component_mananger.h"
+#include "entity_manager.h"
+#include "system_manager.h"
 
 namespace pellengine {
 
-class EntityComponentSytem {
+class EntityComponentSystem {
  public:
-  EntityComponentSytem(const EntityComponentSytem&) = delete;
-  EntityComponentSytem& operator=(const EntityComponentSytem&) = delete;
+  EntityComponentSystem() {}
+  ~EntityComponentSystem() {}
+
+  EntityComponentSystem(const EntityComponentSystem&) = delete;
+  EntityComponentSystem& operator=(const EntityComponentSystem&) = delete;
 
   void initialize() {
     componentManager = std::make_unique<ComponentManager>();
     entityManager = std::make_unique<EntityManager>();
     systemManager = std::make_unique<SystemManager>();
+  }
+
+  template<typename T>
+  void registerComponent() {
+    componentManager->registerComponent<T>();
+  }
+
+  template<typename T>
+  void addComponent(Entity entity, T component) {
+    componentManager->addComponent<T>(entity, component);
+    auto signature = entityManager->getSignature(entity);
+    signature.set(componentManager->getComponentType<T>(), true);
+    entityManager->setSignature(entity, signature);
+    systemManager->entitySignatureChanged(entity, signature);
+  }
+
+  template<typename T>
+  void removeComponent(Entity entity) {
+    componentManager->removeComponent<T>(entity);
+    auto signature = entityManager->getSignature(entity);
+    signature.set(componentManager->getComponentType<T>(), false);
+    entityManager->setSignature(entity, signature);
+    systemManager->entitySignatureChanged(entity, signature);
+  }
+
+  template<typename T>
+  ComponentType getComponentType() {
+    return componentManager->getComponentType<T>();
+  }
+
+  template<typename T>
+  T& getComponent(Entity entity) {
+    return componentManager->getComponent<T>(entity);
   }
 
   Entity createEntity() {
@@ -28,36 +65,11 @@ class EntityComponentSytem {
     entityManager->destroyEntity(entity);
     componentManager->entityDestroyed(entity);
     systemManager->entityDestroyed(entity);
-  }
+  } 
 
   template<typename T>
-  void registerComponent() {
-    componentManager->registerComponent<T>();
-  }
-
-  template<typename T>
-  void removeComponent(Entity entity) {
-    componentManager->removeComponent<T>(entity);
-    
-    auto signature = entityManager->getSignature(entity);
-    signature.set(componentManager->getComponentType<T>(), false);
-    entityManager->setSignature(entity, signature);
-    systemManager->entitySignatureChanged(entity, signature);
-  }
-
-  template<typename T>
-  T& getComponent(Entity entity) {
-    return componentManager->getComponent<T>(entity);
-  }
-
-  template<typename T>
-  ComponentType getComponentType() {
-    return componentManager->getComponentType<T>();
-  }
-
-  template<typename T>
-  std::shared_ptr<T> registerSystem() {
-    return systemManager->registerSystem<T>();
+  void registerSystem(std::shared_ptr<T> system) {
+    systemManager->registerSystem<T>(system);
   }
 
   template<typename T>

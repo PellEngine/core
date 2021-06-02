@@ -1,38 +1,40 @@
-#ifndef _PELLENGINE_ECS_SYSTEM_H_
-#define _PELLENGINE_ECS_SYSTEM_H_
+#ifndef _PELLENGINE_ECS_SYSTEM_MANAGER_H_
+#define _PELLENGINE_ECS_SYSTEM_MANAGER_H_
 
-#include <pellengine/ecs/entity.h>
-#include <pellengine/ecs/component.h>
+#include <ctti/type_id.hpp>
 #include <set>
 #include <memory>
 #include <unordered_map>
+#include "types.h"
 
 namespace pellengine {
 
 class System {
  public:
+  virtual ~System() = default;
   std::set<Entity> entities;
+  virtual void entityInserted(Entity entity) = 0;
+  virtual void entityErased(Entity entity) = 0;
 };
 
 class SystemManager {
  public:
+  SystemManager() {}
+  ~SystemManager() {}
+
   SystemManager(const SystemManager&) = delete;
   SystemManager& operator=(const SystemManager&) = delete;
 
   template<typename T>
-  std::shared_ptr<T> registerSystem() {
-    const char* typeName = typeid(T).name();
-    assert(systems.find(typeName) == systems.end() && "This system already exists.");
-    auto system = std::make_shared<T>();
-    systems.insert({typeName, system});
-    return system;
+  void registerSystem(std::shared_ptr<T> system) {
+    ctti::type_id_t name = ctti::type_id<T>();
+    systems.insert({name, system});
   }
 
   template<typename T>
   void setSignature(Signature signature) {
-    const char* typeName = typeid(T).name();
-    assert(systems.find(typeName) != systems.end() && "This system doesn't exists.");
-    signatures.insert({typeName, signature});
+    ctti::type_id_t name = ctti::type_id<T>();
+    signatures.insert({name, signature});
   }
 
   void entityDestroyed(Entity entity) {
@@ -50,15 +52,17 @@ class SystemManager {
 
       if((entitySignature & systemSignature) == systemSignature) {
         system->entities.insert(entity);
+        system->entityInserted(entity);
       } else {
         system->entities.erase(entity);
+        system->entityErased(entity);
       }
     }
   }
 
  private:
-  std::unordered_map<const char*, Signature> signatures;
-  std::unordered_map<const char*, std::shared_ptr<System>> systems;
+  std::unordered_map<ctti::type_id_t, Signature> signatures;
+  std::unordered_map<ctti::type_id_t, std::shared_ptr<System>> systems;
 };
 
 }

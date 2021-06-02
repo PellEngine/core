@@ -1,32 +1,35 @@
 #ifndef _PELLENGINE_ECS_COMPONENT_MANAGER_H_
 #define _PELLENGINE_ECS_COMPONENT_MANAGER_H_
 
-#include <pellengine/ecs/component.h>
-#include <pellengine/ecs/component_array.h>
+#include <ctti/type_id.hpp>
 #include <unordered_map>
+#include <array>
 #include <memory>
+#include "types.h"
+#include "component_array.h"
 
 namespace pellengine {
 
 class ComponentManager {
  public:
+  ComponentManager() {}
+  ~ComponentManager() {}
+
   ComponentManager(const ComponentManager&) = delete;
   ComponentManager& operator=(const ComponentManager&) = delete;
 
   template<typename T>
   void registerComponent() {
-    const char* typeName = typeid(T).name();
-    assert(componentTypes.find(typeName) == componentTypes.end() && "This component type already exists.");
-    componentTypes.insert({typeName, nextComponentType});
-    componentArrays.insert({typeName, std::make_shared<ComponentArray<T>>()})
+    ctti::type_id_t name = ctti::type_id<T>();
+    componentTypes.insert({name, nextComponentType});
+    componentArrays.insert({name, std::make_shared<ComponentArray<T>>()});
     nextComponentType++;
   }
 
   template<typename T>
   ComponentType getComponentType() {
-    const char* typeName = typeid(T).name();
-    assert(componentTypes.find(typeName) != componentTypes.end() && "Component not registered before use.");
-    return componentTypes[typeName];
+    ctti::type_id_t name = ctti::type_id<T>();
+    return componentTypes[name];
   }
 
   template<typename T>
@@ -52,15 +55,15 @@ class ComponentManager {
   }
 
  private:
-  ComponentType nextComponentType;
-  std::unordered_map<const char*, ComponentType> componentTypes;
-  std::unordered_map<const char*, std::shared_ptr<IComponentArray>> componentArrays;
+  std::unordered_map<ctti::type_id_t, ComponentType> componentTypes;
+  std::unordered_map<ctti::type_id_t, std::shared_ptr<ComponentArrayBase>> componentArrays;
+  std::array<Signature, MAX_ENTITIES> signatures;
+  ComponentType nextComponentType = 0;
 
   template<typename T>
   std::shared_ptr<ComponentArray<T>> getComponentArray() {
-    const char* typeName = typeid(T).name();
-    assert(componentTypes.find(typeName) != componentTypes.end() && "Component not registered before use.");
-    return std::static_pointer_cast<ComponentArray<T>>(componentArrays[typeName]);
+    ctti::type_id_t name = ctti::type_id<T>();
+    return std::static_pointer_cast<ComponentArray<T>>(componentArrays[name]);
   }
 };
 
