@@ -1,9 +1,9 @@
 #ifndef _PELLENGINE_GRAPHICS_COMMAND_BUFFER_H_
 #define _PELLENGINE_GRAPHICS_COMMAND_BUFFER_H_
 
-#include <pellengine/vulkan/vulkan_wrapper.h>
-#include <pellengine/graphics/window.h>
-#include <pellengine/graphics/graphics_pipeline.h>
+#include "src/pellengine/vulkan/vulkan_wrapper.h"
+#include "src/pellengine/graphics/window.h"
+#include "src/pellengine/graphics/graphics_pipeline.h"
 #include <optional>
 #include <memory>
 

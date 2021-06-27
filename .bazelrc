@@ -1,0 +1,11 @@
+# Android arm64 config
+build:android_arm64_config --crosstool_top=//toolchain:android_arm64_suite
+build:android_arm64_config --cpu=arm
+build:android_arm64_config --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+
+# Android armeabi config
+build:android_armeabi_config --crosstool_top=//toolchain:android_armeabi_suite
+build:android_armeabi_config --cpu=armeabi_v7a
+build:android_armeabi_config --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+
+build --cxxopt='-std=c++17'

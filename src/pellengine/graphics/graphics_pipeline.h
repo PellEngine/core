@@ -1,9 +1,9 @@
 #ifndef _PELLENGINE_GRAPHICS_GRAPHICS_PIPELINE_H_
 #define _PELLENGINE_GRAPHICS_GRAPHICS_PIPELINE_H_
 
-#include <pellengine/vulkan/vulkan_wrapper.h>
-#include <pellengine/graphics/window.h>
-#include <pellengine/io/asset_reader.h>
+#include "src/pellengine/vulkan/vulkan_wrapper.h"
+#include "src/pellengine/graphics/window.h"
+#include "src/pellengine/io/asset_reader.h"
 #include <string>
 #include <optional>
 #include <memory>

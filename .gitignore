@@ -1,3 +1,6 @@
 build/
 .pellengine-cache.json
 node_modules/
+/bazel-*
+toolchain/config.bzl
+compile_commands.json

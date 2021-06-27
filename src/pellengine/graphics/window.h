@@ -1,8 +1,8 @@
 #ifndef _PELLENGINE_GRAPHICS_WINDOW_H_
 #define _PELLENGINE_GRAPHICS_WINDOW_H_
 
-#include <pellengine/vulkan/vulkan_wrapper.h>
-#include <pellengine/graphics/instance.h>
+#include "src/pellengine/vulkan/vulkan_wrapper.h"
+#include "src/pellengine/graphics/instance.h"
 #include <string>
 #include <vector>
 

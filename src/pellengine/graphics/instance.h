@@ -1,8 +1,8 @@
 #ifndef _PELLENGINE_GRAPHICS_INSTANCE_H_
 #define _PELLENGINE_GRAPHICS_INSTANCE_H_
 
-#include <pellengine/vulkan/vulkan_wrapper.h>
-#include <pellengine/io/logger.h>
+#include "src/pellengine/vulkan/vulkan_wrapper.h"
+#include "src/pellengine/io/logger.h"
 #include <string>
 #include <vector>
 #include <optional>

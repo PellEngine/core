@@ -1,10 +1,10 @@
 #ifndef _PELLENGINE_GRAPHICS_SWAPCHAIN_RECREATOR_H_
 #define _PELLENGINE_GRAPHICS_SWAPCHAIN_RECREATOR_H_
 
-#include <pellengine/graphics/window.h>
-#include <pellengine/graphics/command_buffer.h>
-#include <pellengine/graphics/graphics_pipeline.h>
-#include <pellengine/io/logger.h>
+#include "src/pellengine/graphics/window.h"
+#include "src/pellengine/graphics/command_buffer.h"
+#include "src/pellengine/graphics/graphics_pipeline.h"
+#include "src/pellengine/io/logger.h"
 #include <vector>
 #include <memory>
 

@@ -1,13 +1,14 @@
 #ifndef _PELLENGINE_COMPONENTS_SPRITE_H_
 #define _PELLENGINE_COMPONENTS_SPRITE_H_
 
-#include <pellengine/components/transform.h>
+#include <glm/vec4.hpp>
 
 namespace pellengine {
 
 struct Sprite {
-  Transform transform;
-  bool outdated;
+  glm::vec4 color;
+  int zIndex;
+  bool dirty;
 };
 
 }
