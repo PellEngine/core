@@ -1,9 +1,9 @@
 #ifndef _PELLENGINE_SYSTEMS_SPRITE_BATCH_SPRITE_BATCH_H_
 #define _PELLENGINE_SYSTEMS_SPRITE_BATCH_SPRITE_BATCH_H_
 
-#include <pellengine/graphics/window.h>
-#include <pellengine/ecs/system_manager.h>
-#include <pellengine/ecs/entity_component_system.h>
+#include "src/pellengine/graphics/window.h"
+#include "src/pellengine/ecs/system_manager.h"
+#include "src/pellengine/ecs/entity_component_system.h"
 #include <memory>
 #include <vector>
 #include "sprite_batch_layer.h"

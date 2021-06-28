@@ -1,13 +1,13 @@
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@bazel_tools//tools/cpp:cc_toolchain_config_lib.bzl", "tool_path", "feature", "flag_group", "flag_set")
 load(":flags.bzl", "global_cflags", "global_ldflags", "global_includes")
-load(":config.bzl", "os_name", "android_version", "ndk_root", "compilers_root", "clang_version")
+load(":config.bzl", "os_name", "android_version", "ndk_root", "compilers_root", "clang_version", "clang_extension")
 
 def _impl(ctx):
   tool_paths = [
     tool_path(
       name = "gcc",
-      path = compilers_root + "armv7a-linux-androideabi" + android_version + "-clang++"
+      path = compilers_root + "armv7a-linux-androideabi" + android_version + "-clang++" + clang_extension
     ),
     tool_path(
       name = "ld",
@@ -87,6 +87,11 @@ def _impl(ctx):
     ],
   )
 
+  dynamic_library_feature = feature(
+    name = "supports_dynamic_linker",
+    enabled = True,
+  )
+
   return cc_common.create_cc_toolchain_config_info(
     ctx = ctx,
     toolchain_identifier = "armeabi-toolchain",
@@ -103,6 +108,7 @@ def _impl(ctx):
     features = [
       toolchain_compiler_flags,
       toolchain_linker_flags,
+      dynamic_library_feature,
     ]
   )
 

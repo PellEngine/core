@@ -15,3 +15,16 @@ cc_library(
     "logger.h",
   ]
 )
+
+filegroup(
+  name = "libio",
+  srcs = [":io"],
+  output_group = "dynamic_library",
+)
+
+genrule(
+  name = "readelf_io",
+  srcs = [":libio"],
+  outs = ["readelf_io.txt"],
+  cmd = "readelf -a $(SRCS) > $@",
+)

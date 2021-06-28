@@ -26,5 +26,6 @@ global_includes = [
   ndk_root + "/toolchains/llvm/prebuilt/" + os_name + "/sysroot/usr/include/android",
   ndk_root + "/toolchains/llvm/prebuilt/" + os_name + "/sysroot/usr/include",
   ndk_root + "/toolchains/llvm/prebuilt/" + os_name + "/sysroot/usr/local/include",
+  ndk_root + "/toolchains/llvm/prebuilt/" + os_name + "/sysroot/usr/include/c++/v1",
   ndk_root + "/toolchains/llvm/prebuilt/" + os_name + "/lib64/clang/" + clang_version + "/include",
 ]

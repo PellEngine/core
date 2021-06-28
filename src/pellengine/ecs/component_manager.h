@@ -1,12 +1,12 @@
 #ifndef _PELLENGINE_ECS_COMPONENT_MANAGER_H_
 #define _PELLENGINE_ECS_COMPONENT_MANAGER_H_
 
-#include <ctti/type_id.hpp>
 #include <unordered_map>
 #include <array>
 #include <memory>
 #include "types.h"
 #include "component_array.h"
+#include "ctti/type_id.hpp"
 
 namespace pellengine {
 

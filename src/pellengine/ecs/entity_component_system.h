@@ -4,9 +4,9 @@
 #include <unordered_map>
 #include <vector>
 #include <memory>
-#include "component_mananger.h"
-#include "entity_manager.h"
-#include "system_manager.h"
+#include "src/pellengine/ecs/component_manager.h"
+#include "src/pellengine/ecs/entity_manager.h"
+#include "src/pellengine/ecs/system_manager.h"
 
 namespace pellengine {
 

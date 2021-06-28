@@ -1,11 +1,11 @@
 #ifndef _PELLENGINE_ECS_SYSTEM_MANAGER_H_
 #define _PELLENGINE_ECS_SYSTEM_MANAGER_H_
 
-#include <ctti/type_id.hpp>
 #include <set>
 #include <memory>
 #include <unordered_map>
 #include "types.h"
+#include "ctti/type_id.hpp"
 
 namespace pellengine {
 

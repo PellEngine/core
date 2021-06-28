@@ -27,5 +27,19 @@ cc_library(
   deps = [
     "//src/pellengine/vulkan:vulkan",
     "//src/pellengine/io:io",
+    "@ctti//:ctti"
   ]
+)
+
+filegroup(
+  name = "libgraphics",
+  srcs = [":graphics"],
+  output_group = "dynamic_library",
+)
+
+genrule(
+  name = "readelf_graphics",
+  srcs = [":libgraphics"],
+  outs = ["readelf_graphics.txt"],
+  cmd = "readelf -a $(SRCS) > $@",
 )
