@@ -33,8 +33,8 @@ filegroup(
 )
 
 genrule(
-  name = "readelf_graphics",
+  name = "readelf_systems",
   srcs = [":libsystems"],
-  outs = ["reafelf_systems.txt"],
+  outs = ["readelf_systems.txt"],
   cmd = "readelf -a $(SRCS) > $@",
 )
