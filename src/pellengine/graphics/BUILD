@@ -4,24 +4,23 @@ package(
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
-cc_library(
-  name = "graphics",
+cc_binary (
+  name = "libgraphics.so",
+  linkshared = True,
   srcs = [
     "buffer.cpp",
-    "command_buffer.cpp",
-    "graphics_pipeline.cpp",
-    "instance.cpp",
-    "renderer.cpp",
-    "swapchain_recreator.cpp",
-    "window.cpp",
-  ],
-  hdrs = [
     "buffer.h",
+    "command_buffer.cpp",
     "command_buffer.h",
+    "graphics_pipeline.cpp",
     "graphics_pipeline.h",
+    "instance.cpp",
     "instance.h",
+    "renderer.cpp",
     "renderer.h",
+    "swapchain_recreator.cpp",
     "swapchain_recreator.h",
+    "window.cpp",
     "window.h",
   ],
   deps = [
@@ -31,15 +30,16 @@ cc_library(
   ]
 )
 
-filegroup(
-  name = "libgraphics",
-  srcs = [":graphics"],
-  output_group = "dynamic_library",
-)
-
-genrule(
-  name = "readelf_graphics",
-  srcs = [":libgraphics"],
-  outs = ["readelf_graphics.txt"],
-  cmd = "readelf -a $(SRCS) > $@",
+cc_library(
+  name = "graphics",
+  srcs = ["libgraphics.so"],
+  hdrs = [
+    "buffer.h",
+    "command_buffer.h",
+    "graphics_pipeline.h",
+    "instance.h",
+    "renderer.h",
+    "swapchain_recreator.h",
+    "window.h",
+  ]
 )
