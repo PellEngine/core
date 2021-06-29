@@ -14,6 +14,10 @@ filegroup(
 compilation_database(
   name = "pellengine_compdb",
   targets = [
-    "//src/pellengine:libpellengine.so"
+    "//src/pellengine/graphics:libgraphics.so",
+    "//src/pellengine/io:libio.so",
+    "//src/pellengine/vulkan:libpellengine_vulkan.so",
+    "//src/pellengine/systems:libsprite_batch.so",
+    "//src/pellengine/ecs:ecs"
   ]
 )

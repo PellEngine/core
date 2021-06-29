@@ -6,7 +6,7 @@
 #include <memory>
 #include "types.h"
 #include "component_array.h"
-#include "ctti/type_id.hpp"
+#include <ctti/type_id.hpp>
 
 namespace pellengine {
 

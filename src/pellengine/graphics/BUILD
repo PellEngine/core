@@ -4,7 +4,7 @@ package(
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
-cc_binary (
+cc_binary(
   name = "libgraphics.so",
   linkshared = True,
   srcs = [

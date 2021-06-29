@@ -5,7 +5,7 @@ package(
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
 cc_binary(
-  name = "libvulkan.so",
+  name = "libpellengine_vulkan.so",
   linkshared = True,
   srcs = [
     "vulkan_android_wrapper.cpp",
@@ -15,7 +15,7 @@ cc_binary(
 
 cc_library(
   name = "vulkan",
-  srcs = ["libvulkan.so"],
+  srcs = ["libpellengine_vulkan.so"],
   hdrs = [
     "vulkan_android_wrapper.h",
     "vulkan_wrapper.h",
