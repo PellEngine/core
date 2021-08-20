@@ -20,7 +20,7 @@ class Renderer {
   void initialize();
   void terminate();
   uint32_t begin();
-  void end(uint32_t imageIndex, CommandBuffer* commandBuffer, size_t commandBuffersSize, bool windowResized);
+  void end(uint32_t imageIndex, std::vector<std::shared_ptr<CommandBuffer>>& commandBuffers, bool windowResized);
 
  private:
   bool initialized = false;

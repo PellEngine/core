@@ -69,7 +69,7 @@ uint32_t Renderer::begin() {
   return imageIndex;
 }
 
-void Renderer::end(uint32_t imageIndex, CommandBuffer* commandBuffer, size_t commandBuffersSize, bool windowResized) {
+void Renderer::end(uint32_t imageIndex, std::vector<std::shared_ptr<CommandBuffer>>& commandBuffers, bool windowResized) {
   VkSubmitInfo submitInfo{};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -78,13 +78,8 @@ void Renderer::end(uint32_t imageIndex, CommandBuffer* commandBuffer, size_t com
   submitInfo.waitSemaphoreCount = 1;
   submitInfo.pWaitSemaphores = waitSemaphores;
   submitInfo.pWaitDstStageMask = waitStages;
-  submitInfo.commandBufferCount = static_cast<uint32_t>(commandBuffersSize);
-  submitInfo.pCommandBuffers = &commandBuffer->getCommandBuffers()[imageIndex];
-  // std::vector<VkCommandBuffer> vkCommandBuffers(commandBuffersSize);
-  // for(size_t i=0;i<commandBuffersSize;i++) {
-  //   vkCommandBuffers.push_back(commandBuffer.getCommandBuffers()[imageIndex]);
-  // }
-  // submitInfo.pCommandBuffers = vkCommandBuffers.data();
+  submitInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
+  submitInfo.pCommandBuffers = &commandBuffers[0]->getCommandBuffers()[imageIndex];
 
   VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
   submitInfo.signalSemaphoreCount = 1;

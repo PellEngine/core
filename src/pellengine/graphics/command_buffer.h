@@ -46,7 +46,7 @@ class CommandBuffer {
   PipelineConfiguration pipelineConfiguration;
   std::vector<VkCommandBuffer> commandBuffers;
 
-  virtual void draw(VkCommandBuffer& buffer) = 0;
+  virtual void draw(VkCommandBuffer& buffer, uint32_t imageIndex) = 0;
 };
 
 }

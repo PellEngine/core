@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include "types.h"
 #include <ctti/type_id.hpp>
+#include <algorithm>
 
 namespace pellengine {
 
@@ -54,8 +55,10 @@ class SystemManager {
         system->entities.insert(entity);
         system->entityInserted(entity);
       } else {
+        if(std::find(system->entities.begin(), system->entities.end(), entity) != system->entities.end()) {
+          system->entityErased(entity);
+        }
         system->entities.erase(entity);
-        system->entityErased(entity);
       }
     }
   }

@@ -65,7 +65,7 @@ void CommandBuffer::record(uint32_t i) {
     }
   }
 
-  draw(commandBuffers[i]);
+  draw(commandBuffers[i], i);
 
   vkCmdEndRenderPass(commandBuffers[i]);
   if(vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {

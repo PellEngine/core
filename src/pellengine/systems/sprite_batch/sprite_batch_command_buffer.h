@@ -5,6 +5,7 @@
 #include "src/pellengine/graphics/command_buffer.h"
 #include "src/pellengine/graphics/window.h"
 #include "src/pellengine/graphics/buffer.h"
+#include "src/pellengine/io/logger.h"
 #include <memory>
 
 namespace pellengine {
@@ -18,7 +19,7 @@ class SpriteBatchCommandBuffer : public CommandBuffer {
   SpriteBatchCommandBuffer& operator=(const SpriteBatchCommandBuffer&) = delete;
 
  protected:
-  void draw(VkCommandBuffer& commandBuffer) override;
+  void draw(VkCommandBuffer& commandBuffer, uint32_t imageIndex) override;
 
  private:
   uint32_t numIndices;

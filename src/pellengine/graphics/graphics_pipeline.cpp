@@ -2,7 +2,14 @@
 
 namespace pellengine {
 
-GraphicsPipeline::GraphicsPipeline(std::shared_ptr<Window> window, ShaderConfiguration shaderConfiguration, VertexConfiguration vertexConfiguration) : shaderConfiguration(shaderConfiguration), vertexConfiguration(vertexConfiguration), window(window) {}
+GraphicsPipeline::GraphicsPipeline(
+  std::shared_ptr<Window> window,
+  ShaderConfiguration shaderConfiguration,
+  VertexConfiguration vertexConfiguration
+) : 
+  shaderConfiguration(shaderConfiguration),
+  vertexConfiguration(vertexConfiguration),
+  window(window) {}
 
 GraphicsPipeline::~GraphicsPipeline() {
   terminate();
@@ -11,6 +18,7 @@ GraphicsPipeline::~GraphicsPipeline() {
 void GraphicsPipeline::initialize() {
   if(initialized) return;
 
+  // Setup graphics pipeline
   size_t vertexShaderSize;
   size_t fragmentShaderSize;
 
@@ -202,7 +210,6 @@ void GraphicsPipeline::createShaderModule(std::vector<char>& code, VkShaderModul
   if(vkCreateShaderModule(window->getInstance()->getDevice(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create shader module");
   }
-
 }
 
 }

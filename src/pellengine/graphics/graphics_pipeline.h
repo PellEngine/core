@@ -52,9 +52,6 @@ class GraphicsPipeline {
   VkPipelineLayout pipelineLayout;
   VkPipeline pipeline;
 
-  std::shared_ptr<std::vector<VkVertexInputBindingDescription>> bindingDescriptions;
-  std::shared_ptr<std::vector<VkVertexInputAttributeDescription>> attributeDescriptions;
-
   void createShaderModule(std::vector<char>& code, VkShaderModule* shaderModule);
 };
 

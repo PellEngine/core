@@ -9,7 +9,7 @@
 #include "src/pellengine/ecs/entity_component_system.h"
 #include "src/pellengine/components/transform.h"
 #include "src/pellengine/components/sprite.h"
-#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <memory>
 #include <vector>
@@ -23,7 +23,7 @@ namespace pellengine {
 const uint32_t SPRITE_BATCH_MAX_SPRITES = 4096;
 
 struct SpriteBatchVertex {
-  glm::vec2 pos;
+  glm::vec3 pos;
   glm::vec4 color;
 
   static VkVertexInputBindingDescription getBindingDescription() {
@@ -46,7 +46,7 @@ struct SpriteBatchVertex {
     // Color attribute
     attributeDescriptions[1].binding = 0;
     attributeDescriptions[1].location = 1;
-    attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
+    attributeDescriptions[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
     attributeDescriptions[1].offset = offsetof(SpriteBatchVertex, color);
 
     return attributeDescriptions;
@@ -62,7 +62,7 @@ struct SpriteBatchVertex {
 
 class SpriteBatchLayer {
  public:
-  SpriteBatchLayer(std::shared_ptr<Window> window, std::shared_ptr<EntityComponentSystem> ecs, uint32_t zIndex);
+  SpriteBatchLayer(std::shared_ptr<Window> window, std::shared_ptr<EntityComponentSystem> ecs);
   ~SpriteBatchLayer();
 
   SpriteBatchLayer(const SpriteBatchLayer&) = delete;
@@ -73,6 +73,14 @@ class SpriteBatchLayer {
   void update(uint32_t imageIndex);
   void addSprite(Entity entity);
   void removeSprite(Entity entity);
+
+  bool hasRoom() {
+    return numSprites < SPRITE_BATCH_MAX_SPRITES;
+  }
+
+  std::shared_ptr<SpriteBatchCommandBuffer> getCommandBuffer() {
+    return commandBuffer;
+  }
 
  private:
   std::shared_ptr<Window> window;
@@ -86,8 +94,8 @@ class SpriteBatchLayer {
   std::array<uint16_t, SPRITE_BATCH_MAX_SPRITES * 6> indices;
   std::unordered_map<uint32_t, bool> commandBufferFresh;
   std::unordered_map<Entity, uint32_t> entityToIndex;
+  std::unordered_map<uint32_t, Entity> indexToEntity;
   uint32_t numSprites = 0;
-  uint32_t zIndex;
 
   void loadVertexProperties(Entity entity, uint32_t index);
 };

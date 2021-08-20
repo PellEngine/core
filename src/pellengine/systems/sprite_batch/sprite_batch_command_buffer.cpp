@@ -10,7 +10,7 @@ SpriteBatchCommandBuffer::SpriteBatchCommandBuffer(std::shared_ptr<Window> windo
 
 SpriteBatchCommandBuffer::~SpriteBatchCommandBuffer() {}
 
-void SpriteBatchCommandBuffer::draw(VkCommandBuffer& commandBuffer) {
+void SpriteBatchCommandBuffer::draw(VkCommandBuffer& commandBuffer, uint32_t imageIndex) {
   VkBuffer vertexBuffers[] = {this->vertexBuffer->buffer};
   VkDeviceSize offsets[] = {0};
   vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);

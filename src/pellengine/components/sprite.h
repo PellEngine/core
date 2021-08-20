@@ -7,7 +7,7 @@ namespace pellengine {
 
 struct Sprite {
   glm::vec4 color;
-  int zIndex;
+  float zIndex;
   bool dirty;
 };
 

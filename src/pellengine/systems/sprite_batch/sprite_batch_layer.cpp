@@ -1,9 +1,15 @@
 #include "sprite_batch_layer.h"
+#include "math.h"
 
 namespace pellengine {
   
-SpriteBatchLayer::SpriteBatchLayer(std::shared_ptr<Window> window, std::shared_ptr<EntityComponentSystem> ecs, uint32_t zIndex) : window(window), ecs(ecs), zIndex(zIndex) {
-  this->graphicsPipeline = std::make_shared<GraphicsPipeline>(window, ShaderConfiguration::test(), SpriteBatchVertex::getVertexConfiguration());
+SpriteBatchLayer::SpriteBatchLayer(std::shared_ptr<Window> window, std::shared_ptr<EntityComponentSystem> ecs) : window(window), ecs(ecs) {
+  this->graphicsPipeline = std::make_shared<GraphicsPipeline>(
+    window,
+    ShaderConfiguration::test(),
+    SpriteBatchVertex::getVertexConfiguration()
+  );
+
   this->commandBuffer = std::make_shared<SpriteBatchCommandBuffer>(window, PipelineConfiguration::generateGraphicsPipelineConfiguration(graphicsPipeline), &vertexBuffer, &indexBuffer, SPRITE_BATCH_MAX_SPRITES * 6);
   SwapChainRecreator::registerCommandBuffer(commandBuffer);
   SwapChainRecreator::registerGraphicsPipeline(graphicsPipeline);
@@ -13,6 +19,7 @@ SpriteBatchLayer::~SpriteBatchLayer() {}
 
 void SpriteBatchLayer::initialize() {
   graphicsPipeline->initialize();
+  
   createBuffer(
     window,
     &vertexBuffer,
@@ -21,6 +28,7 @@ void SpriteBatchLayer::initialize() {
     VK_SHARING_MODE_EXCLUSIVE,
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
   );
+  
   createBuffer(
     window,
     &indexBuffer,
@@ -56,29 +64,44 @@ void SpriteBatchLayer::terminate() {
 void SpriteBatchLayer::addSprite(Entity entity) {
   uint32_t newIndex = numSprites;
   entityToIndex[entity] = newIndex;
+  indexToEntity[newIndex] = entity;
   loadVertexProperties(entity, newIndex);
   entities.insert(entity);
   numSprites++;
 }
 
 void SpriteBatchLayer::removeSprite(Entity entity) {
-  
+  // Find the sprite index for this sprite and the last sprite. Move the last sprite back the empty spot.
+  Entity lastEntity = indexToEntity[numSprites - 1];
+  uint32_t entityIndex = entityToIndex[entity];
+
+  indexToEntity[entityIndex] = lastEntity;
+  entityToIndex[lastEntity] = entityIndex;
+
+  int offset = (numSprites - 1) * 4;
+  vertices[offset + 0] = {};
+  vertices[offset + 1] = {};
+  vertices[offset + 2] = {};
+  vertices[offset + 3] = {};
+
+  loadVertexProperties(lastEntity, entityIndex);
 }
 
 void SpriteBatchLayer::loadVertexProperties(Entity entity, uint32_t index) {
   Sprite& sprite = ecs->getComponent<Sprite>(entity);
   Transform& transform = ecs->getComponent<Transform>(entity);
   int offset = index * 4;
-  vertices[offset + 0] = {{transform.position.x, transform.position.y}, sprite.color};
-  vertices[offset + 1] = {{transform.position.x + transform.scale.x, transform.position.y}, sprite.color};
-  vertices[offset + 2] = {{transform.position.x + transform.scale.x, transform.position.y + transform.scale.y}, sprite.color};
-  vertices[offset + 3] = {{transform.position.x, transform.position.y + transform.scale.y}, sprite.color};
+  vertices[offset + 0] = {{transform.position.x, transform.position.y, sprite.zIndex}, sprite.color};
+  vertices[offset + 1] = {{transform.position.x  + transform.scale.x, transform.position.y, sprite.zIndex}, sprite.color};
+  vertices[offset + 2] = {{transform.position.x + transform.scale.x, transform.position.y + transform.scale.y, sprite.zIndex}, sprite.color};
+  vertices[offset + 3] = {{transform.position.x, transform.position.y + transform.scale.y, sprite.zIndex}, sprite.color};
   commandBufferFresh.clear();
 }
 
 void SpriteBatchLayer::update(uint32_t imageIndex) {
   for(const Entity& entity : entities) {
     Sprite& sprite = ecs->getComponent<Sprite>(entity);
+
     if(sprite.dirty) {
       loadVertexProperties(entity, entityToIndex[entity]);
       sprite.dirty = false;

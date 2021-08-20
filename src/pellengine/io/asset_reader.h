@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include "src/pellengine/io/logger.h"
 
 #ifdef ANDROID
   #include <android/native_activity.h>

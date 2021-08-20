@@ -19,7 +19,9 @@ global_ldflags = [
   "-lm",
   "-landroid",
   "-llog",
-  "-L" + ndk_root + "/toolchains/llvm/prebuilt/" + os_name + "/sysroot/usr/lib/aarch64-linux-android/" + android_version
+  "-L" + ndk_root + "/toolchains/llvm/prebuilt/" + os_name + "/sysroot/usr/lib/aarch64-linux-android/" + android_version,
+  "-rdynamic",
+  "-fvisibility=default",
 ]
 
 global_includes = [
