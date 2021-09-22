@@ -49,6 +49,10 @@ class Window {
     return renderPass;
   }
 
+  VkRenderPass getTransparentRenderPass() {
+    return transparentRenderPass;
+  }
+
   VkSwapchainKHR getSwapchain() {
     return swapChain;
   }
@@ -75,6 +79,7 @@ class Window {
   std::vector<VkImageView> swapChainImageViews;
 
   VkRenderPass renderPass;
+  VkRenderPass transparentRenderPass;
   std::vector<VkFramebuffer> swapChainFrameBuffers;
   VkCommandPool commandPool;
 
@@ -91,6 +96,8 @@ class Window {
   VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
   VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
   VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+
+  VkRenderPass getRenderPass(bool transparent);
 };
 
 }

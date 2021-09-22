@@ -5,10 +5,12 @@ namespace pellengine {
 GraphicsPipeline::GraphicsPipeline(
   std::shared_ptr<Window> window,
   ShaderConfiguration shaderConfiguration,
-  VertexConfiguration vertexConfiguration
+  VertexConfiguration vertexConfiguration,
+  UniformBufferConfiguration uniformBufferConfiguration
 ) : 
   shaderConfiguration(shaderConfiguration),
   vertexConfiguration(vertexConfiguration),
+  uniformBufferConfiguration(uniformBufferConfiguration),
   window(window) {}
 
 GraphicsPipeline::~GraphicsPipeline() {
@@ -148,10 +150,18 @@ void GraphicsPipeline::initialize() {
   // Create pipeline layout
   VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
   pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  pipelineLayoutCreateInfo.setLayoutCount = 0;
-  pipelineLayoutCreateInfo.pSetLayouts = nullptr;
   pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
   pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+
+  descriptorSetLayouts.clear();
+  for(std::shared_ptr<UniformBuffer> uniformBuffer : uniformBufferConfiguration.uniformBuffers) {
+    for(VkDescriptorSetLayout descriptorSetLayout : uniformBuffer->getDescriptorSetLayouts()) {
+      descriptorSetLayouts.push_back(descriptorSetLayout);
+    }
+  }
+
+  pipelineLayoutCreateInfo.setLayoutCount = descriptorSetLayouts.size();
+  pipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayouts.data();
 
   if(vkCreatePipelineLayout(window->getInstance()->getDevice(), &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create pipeline layout");
@@ -189,13 +199,84 @@ void GraphicsPipeline::initialize() {
   if(shaderConfiguration.fragmentShader.has_value())
     vkDestroyShaderModule(window->getInstance()->getDevice(), vertexShaderModule, nullptr);
 
+  createDescriptorPool();
+  createDescriptorSets();
+
   initialized = true;
+}
+
+void GraphicsPipeline::createDescriptorPool() {
+  // Get number of required descriptor sets
+  size_t numDescriptorSets = 0;
+  for(std::shared_ptr<UniformBuffer> uniformBuffer : uniformBufferConfiguration.uniformBuffers) {
+    numDescriptorSets += uniformBuffer->getDescriptorSetLayouts().size();
+  }
+
+  VkDescriptorPoolSize poolSize{};
+  poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  poolSize.descriptorCount = static_cast<uint32_t>(window->getSwapChainImages().size());
+
+  VkDescriptorPoolCreateInfo poolInfo{};
+  poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  poolInfo.poolSizeCount = 1;
+  poolInfo.pPoolSizes = &poolSize;
+  poolInfo.maxSets = static_cast<uint32_t>(window->getSwapChainImages().size() * numDescriptorSets);
+
+  if(vkCreateDescriptorPool(window->getInstance()->getDevice(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
+    throw std::runtime_error("Failed to create descriptor pool.");
+  }
+}
+
+void GraphicsPipeline::createDescriptorSets() {
+  descriptorSets.resize(uniformBufferConfiguration.uniformBuffers.size());
+
+  for(int i=0;i<uniformBufferConfiguration.uniformBuffers.size();i++) {
+    std::shared_ptr<UniformBuffer> uniformBuffer = uniformBufferConfiguration.uniformBuffers[i];
+
+    // Allocate descriptor sets
+    for(int j=0;j<uniformBuffer->getDescriptorSetLayouts().size();j++) {
+      VkDescriptorSetLayout descriptorSetLayout = uniformBuffer->getDescriptorSetLayouts()[j];
+      std::vector<VkDescriptorSetLayout> layouts(window->getSwapChainImages().size(), descriptorSetLayout);
+      VkDescriptorSetAllocateInfo allocInfo{};
+      allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+      allocInfo.descriptorPool = descriptorPool;
+      allocInfo.descriptorSetCount = static_cast<uint32_t>(window->getSwapChainImages().size());
+      allocInfo.pSetLayouts = layouts.data();
+
+      descriptorSets[i].resize(descriptorSets[i].size() + window->getSwapChainImages().size());
+      if(vkAllocateDescriptorSets(window->getInstance()->getDevice(), &allocInfo, descriptorSets[i].data() + j * window->getSwapChainImages().size()) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to allocate descriptor sets.");
+      }
+
+      // Populate descriptor sets
+      for(size_t k=0;k<window->getSwapChainImages().size();k++) {
+        VkDescriptorBufferInfo bufferInfo{};
+        bufferInfo.buffer = uniformBuffer->getBuffers()[i].buffer;
+        bufferInfo.offset = 0;
+        bufferInfo.range = uniformBuffer->getUniformSize();
+
+        VkWriteDescriptorSet descriptorWrite{};
+        descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        descriptorWrite.dstSet = descriptorSets[i][j * window->getSwapChainImages().size() + k];
+        descriptorWrite.dstBinding = uniformBuffer->getBinding();
+        descriptorWrite.dstArrayElement = 0;
+        descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        descriptorWrite.descriptorCount = 1;
+        descriptorWrite.pBufferInfo = &bufferInfo;
+        descriptorWrite.pImageInfo = nullptr;
+        descriptorWrite.pTexelBufferView = nullptr;
+
+        vkUpdateDescriptorSets(window->getInstance()->getDevice(), 1, &descriptorWrite, 0, nullptr);
+      }
+    }
+  }
 }
 
 void GraphicsPipeline::terminate() {
   if(!initialized) return;
   vkDestroyPipeline(window->getInstance()->getDevice(), pipeline, nullptr);
   vkDestroyPipelineLayout(window->getInstance()->getDevice(), pipelineLayout, nullptr);
+  vkDestroyDescriptorPool(window->getInstance()->getDevice(), descriptorPool, nullptr);
   initialized = false;
 }
 

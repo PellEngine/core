@@ -50,14 +50,14 @@ void SpriteBatch::entityInserted(Entity entity) {
   // Create new sprite batch layer and add entity
   if(!added) {
     std::shared_ptr<SpriteBatchLayer> layer = std::make_shared<SpriteBatchLayer>(window, ecs);
-    layers.push_back(layer);
-    commandBuffers.push_back(layer->getCommandBuffer());
-    layer->addSprite(entity);
-    entityToLayer.insert({ entity, layers.size() - 1 });
-
     if(initialized) {
       layer->initialize();
     }
+    
+    layers.push_back(layer);
+    commandBuffers.push_back(layer->getCommandBuffer());
+    layer->addSprite(entity);
+    entityToLayer.insert({ entity, layers.size() - 1 }); 
   }
 }
 

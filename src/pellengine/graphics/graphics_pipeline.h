@@ -3,6 +3,7 @@
 
 #include "src/pellengine/vulkan/vulkan_wrapper.h"
 #include "src/pellengine/graphics/window.h"
+#include "src/pellengine/graphics/uniform_buffer.h"
 #include "src/pellengine/io/asset_reader.h"
 #include <string>
 #include <optional>
@@ -29,9 +30,13 @@ struct VertexConfiguration {
   std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
 };
 
+struct UniformBufferConfiguration {
+  std::vector<std::shared_ptr<UniformBuffer>> uniformBuffers;
+};
+
 class GraphicsPipeline {
  public:
-  GraphicsPipeline(std::shared_ptr<Window> window, ShaderConfiguration shaderConfiguration, VertexConfiguration vertexConfiguration);
+  GraphicsPipeline(std::shared_ptr<Window> window, ShaderConfiguration shaderConfiguration, VertexConfiguration vertexConfiguration, UniformBufferConfiguration uniformBufferConfiguration);
   ~GraphicsPipeline();
 
   GraphicsPipeline(const GraphicsPipeline&) = delete;
@@ -44,14 +49,28 @@ class GraphicsPipeline {
     return pipeline;
   }
 
+  VkPipelineLayout getPipelineLayout() {
+    return pipelineLayout;
+  }
+
+  std::vector<std::vector<VkDescriptorSet>>& getDescriptorSets() {
+    return descriptorSets;
+  }
+
  private:
   bool initialized = false;;
   ShaderConfiguration shaderConfiguration;
   VertexConfiguration vertexConfiguration;
+  UniformBufferConfiguration uniformBufferConfiguration;
   std::shared_ptr<Window> window;
   VkPipelineLayout pipelineLayout;
   VkPipeline pipeline;
+  std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+  std::vector<std::vector<VkDescriptorSet>> descriptorSets;
+  VkDescriptorPool descriptorPool;
 
+  void createDescriptorPool();
+  void createDescriptorSets();
   void createShaderModule(std::vector<char>& code, VkShaderModule* shaderModule);
 };
 

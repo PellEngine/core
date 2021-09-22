@@ -17,6 +17,7 @@
 #include <set>
 #include <unordered_map>
 #include "sprite_batch_command_buffer.h"
+#include "sprite_batch_uniform_buffer.h"
 
 namespace pellengine {
 
@@ -86,6 +87,7 @@ class SpriteBatchLayer {
   std::shared_ptr<Window> window;
   std::shared_ptr<EntityComponentSystem> ecs;
   std::shared_ptr<SpriteBatchCommandBuffer> commandBuffer;
+  std::shared_ptr<SpriteBatchUniformBuffer> uniformBuffer;
   std::shared_ptr<GraphicsPipeline> graphicsPipeline;
   std::set<Entity> entities;
   Buffer vertexBuffer;

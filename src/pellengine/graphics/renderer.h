@@ -5,6 +5,7 @@
 #include "src/pellengine/graphics/window.h"
 #include "src/pellengine/graphics/command_buffer.h"
 #include "src/pellengine/graphics/swapchain_recreator.h"
+#include "src/pellengine/graphics/clear_command_buffer.h"
 #include <memory>
 
 namespace pellengine {
@@ -30,6 +31,8 @@ class Renderer {
   std::vector<VkSemaphore> renderFinishedSemaphores;
   std::vector<VkFence> inFlightFences;
   std::vector<VkFence> imagesInFlight;
+
+  std::shared_ptr<ClearCommandBuffer> clearCommandBuffer;
 };
 
 }

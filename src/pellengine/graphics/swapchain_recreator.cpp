@@ -26,6 +26,10 @@ void SwapChainRecreator::registerGraphicsPipeline(std::shared_ptr<GraphicsPipeli
   getInstance()->graphicsPipelines.push_back(graphicsPipeline);
 }
 
+void SwapChainRecreator::registerUniformBuffer(std::shared_ptr<UniformBuffer> uniformBuffer) {
+  getInstance()->uniformBuffers.push_back(uniformBuffer);
+}
+
 void SwapChainRecreator::recreate() {
   // Make sure that window pointer still manages an object 
   if(getInstance()->windowPtr.expired()) {
@@ -38,6 +42,7 @@ void SwapChainRecreator::recreate() {
 
     std::vector<std::weak_ptr<CommandBuffer>>& commandBuffers = getInstance()->commandBuffers;
     std::vector<std::weak_ptr<GraphicsPipeline>>& graphicsPipelines = getInstance()->graphicsPipelines;
+    std::vector<std::weak_ptr<UniformBuffer>>& uniformBuffers = getInstance()->uniformBuffers;
 
     // Terminate swap chain resources
     for(auto it=commandBuffers.begin();it!=commandBuffers.end();) {
@@ -46,6 +51,15 @@ void SwapChainRecreator::recreate() {
         it++;
       } else {
         commandBuffers.erase(it);
+      }
+    }
+
+    for(auto it=uniformBuffers.begin();it!=uniformBuffers.end();) {
+      if(auto uniformBuffer = it->lock()) {
+        uniformBuffer->terminateSwapChain();
+        it++;
+      } else {
+        uniformBuffers.erase(it);
       }
     }
 
@@ -62,7 +76,16 @@ void SwapChainRecreator::recreate() {
 
     // Recreate swap chain resources
     window->recreateSwapChain();
-    
+
+    for(auto it=uniformBuffers.begin();it!=uniformBuffers.end();) {
+      if(auto uniformBuffer = it->lock()) {
+        uniformBuffer->recreateSwapChain();
+        it++;
+      } else {
+        uniformBuffers.erase(it);
+      }
+    }
+
     for(auto it=graphicsPipelines.begin();it!=graphicsPipelines.end();) {
       if(auto graphicsPipeline = it->lock()) {
         graphicsPipeline->initialize();

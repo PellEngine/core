@@ -126,10 +126,17 @@ void Window::createImageViews() {
 }
 
 void Window::createRenderPass() {
+  renderPass = getRenderPass(false);
+  transparentRenderPass = getRenderPass(true);
+}
+
+VkRenderPass Window::getRenderPass(bool transparent) {
+  VkRenderPass pass;
+
   VkAttachmentDescription colorAttachment{};
   colorAttachment.format = swapChainImageFormat;
   colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-  colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+  colorAttachment.loadOp = transparent ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
   colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
   colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -164,9 +171,11 @@ void Window::createRenderPass() {
   renderPassInfo.dependencyCount = 1;
   renderPassInfo.pDependencies = &dependency;
 
-  if(vkCreateRenderPass(instance->getDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
+  if(vkCreateRenderPass(instance->getDevice(), &renderPassInfo, nullptr, &pass) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create render pass");
   }
+
+  return pass;
 }
 
 void Window::createFramebuffers() {

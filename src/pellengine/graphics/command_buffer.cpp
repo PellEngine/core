@@ -47,15 +47,11 @@ void CommandBuffer::record(uint32_t i) {
 
   VkRenderPassBeginInfo renderPassInfo{};
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  renderPassInfo.renderPass = window->getRenderPass();
+  renderPassInfo.renderPass = window->getTransparentRenderPass();
   renderPassInfo.framebuffer = window->getSwapChainFrameBuffers()[i];
   renderPassInfo.renderArea.offset = {0, 0};
   renderPassInfo.renderArea.extent = window->getSwapChainExtent();
-
-  VkClearValue clearColor = {0.0f, 0.0f, 0.0f, 1.0f};
-  renderPassInfo.clearValueCount = 1;
-  renderPassInfo.pClearValues = &clearColor;
-
+  
   vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
   
   switch(pipelineConfiguration.bindPoint) {

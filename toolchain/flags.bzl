@@ -4,13 +4,13 @@ global_cflags = [
   "-fpic",
   "-Os",
   "-Wall",
-  "-c",
   "-D ANDROID",
   "-D ANDROID_FULLSCREEN",
   "-D DEBUG",
   "-D PLATFORM=\"ANDROID\"",
   "-DVK_USE_PLATFORM_ANDROID_KHR",
-  "-I" + ndk_root + "/toolchains/llvm/prebuilt/" + os_name + "/sysroot/usr/include/android"
+  "-I" + ndk_root + "/toolchains/llvm/prebuilt/" + os_name + "/sysroot/usr/include/android",
+  "-c",
 ]
 
 global_ldflags = [

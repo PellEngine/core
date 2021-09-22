@@ -11,6 +11,10 @@ Renderer::~Renderer() {
 void Renderer::initialize() {
   if(initialized) return;
 
+  clearCommandBuffer = std::make_shared<ClearCommandBuffer>(window);
+  clearCommandBuffer->initialize();
+  clearCommandBuffer->recordAll();
+
   imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
   renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
   inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -32,12 +36,14 @@ void Renderer::initialize() {
       throw std::runtime_error("failed to create semaphores!");
     }
   }
-
+  
   initialized = false;
 }
 
 void Renderer::terminate() {
   if(!initialized) return;
+
+  clearCommandBuffer->terminate();
 
   for(size_t i=0;i<MAX_FRAMES_IN_FLIGHT;i++) {
     vkDestroySemaphore(window->getInstance()->getDevice(), imageAvailableSemaphores[i], nullptr);
@@ -78,8 +84,15 @@ void Renderer::end(uint32_t imageIndex, std::vector<std::shared_ptr<CommandBuffe
   submitInfo.waitSemaphoreCount = 1;
   submitInfo.pWaitSemaphores = waitSemaphores;
   submitInfo.pWaitDstStageMask = waitStages;
-  submitInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
-  submitInfo.pCommandBuffers = &commandBuffers[0]->getCommandBuffers()[imageIndex];
+
+  std::vector<VkCommandBuffer> commandBuffersFrame;
+  commandBuffersFrame.push_back(clearCommandBuffer->getCommandBuffers()[imageIndex]);
+
+  for(std::shared_ptr<CommandBuffer> commandBuffer : commandBuffers) {
+    commandBuffersFrame.push_back(commandBuffer->getCommandBuffers()[imageIndex]);
+  }
+  submitInfo.pCommandBuffers = commandBuffersFrame.data();
+  submitInfo.commandBufferCount = static_cast<uint32_t>(commandBuffersFrame.size());
 
   VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
   submitInfo.signalSemaphoreCount = 1;

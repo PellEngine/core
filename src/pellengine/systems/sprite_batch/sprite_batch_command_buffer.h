@@ -12,7 +12,7 @@ namespace pellengine {
 
 class SpriteBatchCommandBuffer : public CommandBuffer {
  public:
-  SpriteBatchCommandBuffer(std::shared_ptr<Window> window, PipelineConfiguration pipelineConfiguration, Buffer* vertexBuffer, Buffer* indexBuffer, uint32_t numIndices);  
+  SpriteBatchCommandBuffer(std::shared_ptr<Window> window, PipelineConfiguration pipelineConfiguration, Buffer* vertexBuffer, Buffer* indexBuffer, uint32_t numIndices, std::shared_ptr<GraphicsPipeline> graphicsPipeline);  
   ~SpriteBatchCommandBuffer();
 
   SpriteBatchCommandBuffer(const SpriteBatchCommandBuffer&) = delete;
@@ -25,6 +25,7 @@ class SpriteBatchCommandBuffer : public CommandBuffer {
   uint32_t numIndices;
   Buffer* vertexBuffer;
   Buffer* indexBuffer;
+  std::shared_ptr<GraphicsPipeline> graphicsPipeline;
 };
 
 }

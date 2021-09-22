@@ -4,20 +4,27 @@
 namespace pellengine {
   
 SpriteBatchLayer::SpriteBatchLayer(std::shared_ptr<Window> window, std::shared_ptr<EntityComponentSystem> ecs) : window(window), ecs(ecs) {
+  this->uniformBuffer = std::make_shared<SpriteBatchUniformBuffer>(window, 0);
+
   this->graphicsPipeline = std::make_shared<GraphicsPipeline>(
     window,
     ShaderConfiguration::test(),
-    SpriteBatchVertex::getVertexConfiguration()
+    SpriteBatchVertex::getVertexConfiguration(),
+    UniformBufferConfiguration{
+      .uniformBuffers = {this->uniformBuffer}
+    }
   );
 
-  this->commandBuffer = std::make_shared<SpriteBatchCommandBuffer>(window, PipelineConfiguration::generateGraphicsPipelineConfiguration(graphicsPipeline), &vertexBuffer, &indexBuffer, SPRITE_BATCH_MAX_SPRITES * 6);
+  this->commandBuffer = std::make_shared<SpriteBatchCommandBuffer>(window, PipelineConfiguration::generateGraphicsPipelineConfiguration(graphicsPipeline), &vertexBuffer, &indexBuffer, SPRITE_BATCH_MAX_SPRITES * 6, graphicsPipeline);
   SwapChainRecreator::registerCommandBuffer(commandBuffer);
   SwapChainRecreator::registerGraphicsPipeline(graphicsPipeline);
+  SwapChainRecreator::registerUniformBuffer(uniformBuffer);
 }
 
 SpriteBatchLayer::~SpriteBatchLayer() {}
 
 void SpriteBatchLayer::initialize() {
+  uniformBuffer->initialize();
   graphicsPipeline->initialize();
   
   createBuffer(
@@ -55,6 +62,7 @@ void SpriteBatchLayer::initialize() {
 }
 
 void SpriteBatchLayer::terminate() {
+  uniformBuffer->terminate();
   commandBuffer->terminate();
   terminateBuffer(window, &vertexBuffer);
   terminateBuffer(window, &indexBuffer);
@@ -122,6 +130,8 @@ void SpriteBatchLayer::update(uint32_t imageIndex) {
     commandBuffer->record(imageIndex);
     commandBufferFresh[imageIndex] = true;
   }
+
+  uniformBuffer->updateUniformBuffer(imageIndex);
 }
 
 }

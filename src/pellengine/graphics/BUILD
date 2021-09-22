@@ -10,6 +10,8 @@ cc_binary(
   srcs = [
     "buffer.cpp",
     "buffer.h",
+    "clear_command_buffer.cpp",
+    "clear_command_buffer.h",
     "command_buffer.cpp",
     "command_buffer.h",
     "graphics_pipeline.cpp",
@@ -20,6 +22,8 @@ cc_binary(
     "renderer.h",
     "swapchain_recreator.cpp",
     "swapchain_recreator.h",
+    "uniform_buffer.cpp",
+    "uniform_buffer.h",
     "window.cpp",
     "window.h",
   ],
@@ -35,11 +39,13 @@ cc_library(
   srcs = ["libgraphics.so"],
   hdrs = [
     "buffer.h",
+    "clear_command_buffer.h",
     "command_buffer.h",
     "graphics_pipeline.h",
     "instance.h",
     "renderer.h",
     "swapchain_recreator.h",
+    "uniform_buffer.h",
     "window.h",
   ]
 )

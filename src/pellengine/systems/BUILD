@@ -12,6 +12,8 @@ cc_binary(
     "sprite_batch/sprite_batch_command_buffer.h",
     "sprite_batch/sprite_batch_layer.cpp",
     "sprite_batch/sprite_batch_layer.h",
+    "sprite_batch/sprite_batch_uniform_buffer.cpp",
+    "sprite_batch/sprite_batch_uniform_buffer.h",
     "sprite_batch/sprite_batch.cpp",
     "sprite_batch/sprite_batch.h",
   ],
@@ -31,6 +33,7 @@ cc_library(
   hdrs = [
     "sprite_batch/sprite_batch_command_buffer.h",
     "sprite_batch/sprite_batch_layer.h",
+    "sprite_batch/sprite_batch_uniform_buffer.h",
     "sprite_batch/sprite_batch.h",
   ]
 )
