@@ -33,6 +33,8 @@ class Renderer {
   std::vector<VkFence> imagesInFlight;
 
   std::shared_ptr<ClearCommandBuffer> clearCommandBuffer;
+
+  void recreateSwapChain();
 };
 
 }

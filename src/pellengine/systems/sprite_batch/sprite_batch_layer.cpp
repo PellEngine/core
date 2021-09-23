@@ -57,6 +57,12 @@ void SpriteBatchLayer::initialize() {
     indices[indexOffset + 5] = vertexOffset + 0;
   }
 
+  // Load all vertex properties as buffers are cleared when
+  // app is put in background
+  for(const Entity& entity : entities) {
+    loadVertexProperties(entity, entityToIndex[entity]);
+  }
+
   commandBuffer->initialize();
   commandBuffer->recordAll();
 }

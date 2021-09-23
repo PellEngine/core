@@ -2,9 +2,7 @@
 
 namespace pellengine {
 
-ClearCommandBuffer::ClearCommandBuffer(std::shared_ptr<Window> window) : window(window) {
-  initialize();
-}
+ClearCommandBuffer::ClearCommandBuffer(std::shared_ptr<Window> window) : window(window) {}
 
 void ClearCommandBuffer::initialize() {
   if(initialized) return;

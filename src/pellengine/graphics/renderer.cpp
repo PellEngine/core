@@ -2,7 +2,9 @@
 
 namespace pellengine {
 
-Renderer::Renderer(std::shared_ptr<Window> window) : window(window) {}
+Renderer::Renderer(std::shared_ptr<Window> window) : window(window) {
+  clearCommandBuffer = std::make_shared<ClearCommandBuffer>(window);
+}
 
 Renderer::~Renderer() {
   terminate();
@@ -11,7 +13,6 @@ Renderer::~Renderer() {
 void Renderer::initialize() {
   if(initialized) return;
 
-  clearCommandBuffer = std::make_shared<ClearCommandBuffer>(window);
   clearCommandBuffer->initialize();
   clearCommandBuffer->recordAll();
 
@@ -37,7 +38,7 @@ void Renderer::initialize() {
     }
   }
   
-  initialized = false;
+  initialized = true;
 }
 
 void Renderer::terminate() {
@@ -60,7 +61,7 @@ uint32_t Renderer::begin() {
   VkResult result = vkAcquireNextImageKHR(window->getInstance()->getDevice(), window->getSwapchain(), UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
   if(result == VK_ERROR_OUT_OF_DATE_KHR) {
-    SwapChainRecreator::recreate();
+    recreateSwapChain();
     return imageIndex;
   } else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
     throw std::runtime_error("Failed to acquire swap chain image.");
@@ -117,12 +118,20 @@ void Renderer::end(uint32_t imageIndex, std::vector<std::shared_ptr<CommandBuffe
 
   VkResult result = vkQueuePresentKHR(window->getInstance()->getPresentQueue(), &presentInfo);
   if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || windowResized) {
-    SwapChainRecreator::recreate();
+    recreateSwapChain();
   } else if(result != VK_SUCCESS) {
     throw std::runtime_error("Failed to present swap chain image.");
   }
 
   currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+void Renderer::recreateSwapChain() {
+  vkDeviceWaitIdle(window->getInstance()->getDevice());
+  clearCommandBuffer->terminate();
+  SwapChainRecreator::recreate();
+  clearCommandBuffer->initialize();
+  clearCommandBuffer->recordAll();
 }
 
 }

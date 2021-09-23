@@ -229,6 +229,7 @@ void Window::terminateSwapChain() {
   }
 
   vkDestroyRenderPass(instance->getDevice(), renderPass, nullptr);
+  vkDestroyRenderPass(instance->getDevice(), transparentRenderPass, nullptr);
 
   for(auto imageView : swapChainImageViews) {
     vkDestroyImageView(instance->getDevice(), imageView, nullptr);
