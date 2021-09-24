@@ -56,7 +56,7 @@ void SwapChainRecreator::recreate() {
 
     for(auto it=uniformBuffers.begin();it!=uniformBuffers.end();) {
       if(auto uniformBuffer = it->lock()) {
-        uniformBuffer->terminateSwapChain();
+        uniformBuffer->terminate();
         it++;
       } else {
         uniformBuffers.erase(it);
@@ -79,7 +79,7 @@ void SwapChainRecreator::recreate() {
 
     for(auto it=uniformBuffers.begin();it!=uniformBuffers.end();) {
       if(auto uniformBuffer = it->lock()) {
-        uniformBuffer->recreateSwapChain();
+        uniformBuffer->initialize();
         it++;
       } else {
         uniformBuffers.erase(it);

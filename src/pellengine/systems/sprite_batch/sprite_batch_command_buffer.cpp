@@ -15,7 +15,7 @@ void SpriteBatchCommandBuffer::draw(VkCommandBuffer& commandBuffer, uint32_t ima
   VkBuffer vertexBuffers[] = {this->vertexBuffer->buffer};
   VkDeviceSize offsets[] = {0};
 
-  vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->getPipelineLayout(), 0, 1, &graphicsPipeline->getDescriptorSets()[0][imageIndex], 0, nullptr);
+  vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->getPipelineLayout(), 0, 1, &graphicsPipeline->getDescriptorSets()[0], 0, nullptr);
   vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
   vkCmdBindIndexBuffer(commandBuffer, indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT16);
   vkCmdDrawIndexed(commandBuffer, numIndices, 1, 0, 0, 0);

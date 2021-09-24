@@ -4,14 +4,14 @@
 namespace pellengine {
   
 SpriteBatchLayer::SpriteBatchLayer(std::shared_ptr<Window> window, std::shared_ptr<EntityComponentSystem> ecs) : window(window), ecs(ecs) {
-  this->uniformBuffer = std::make_shared<SpriteBatchUniformBuffer>(window, 0);
+  this->uniformBuffer = std::make_shared<UniformBuffer>(0, window, sizeof(SpriteBatchUniformBufferObject));
 
   this->graphicsPipeline = std::make_shared<GraphicsPipeline>(
     window,
     ShaderConfiguration::test(),
     SpriteBatchVertex::getVertexConfiguration(),
-    UniformBufferConfiguration{
-      .uniformBuffers = {this->uniformBuffer}
+    DescriptorSetConfiguration{
+      .descriptorSetProviders = {uniformBuffer}
     }
   );
 
@@ -137,7 +137,11 @@ void SpriteBatchLayer::update(uint32_t imageIndex) {
     commandBufferFresh[imageIndex] = true;
   }
 
-  uniformBuffer->updateUniformBuffer(imageIndex);
+  SpriteBatchUniformBufferObject ubo{};
+  ubo.proj = glm::ortho(0.0f, (float)window->getSwapChainExtent().width, 0.0f, (float)window->getSwapChainExtent().height);
+  void* data = uniformBuffer->map(imageIndex);
+  memcpy(data, &ubo, sizeof(ubo));
+  uniformBuffer->unmap(imageIndex, data);
 }
 
 }

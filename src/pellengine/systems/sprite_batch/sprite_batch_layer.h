@@ -6,6 +6,7 @@
 #include "src/pellengine/graphics/graphics_pipeline.h"
 #include "src/pellengine/graphics/window.h"
 #include "src/pellengine/graphics/swapchain_recreator.h"
+#include "src/pellengine/graphics/uniform_buffer.h"
 #include "src/pellengine/ecs/entity_component_system.h"
 #include "src/pellengine/components/transform.h"
 #include "src/pellengine/components/sprite.h"
@@ -87,7 +88,7 @@ class SpriteBatchLayer {
   std::shared_ptr<Window> window;
   std::shared_ptr<EntityComponentSystem> ecs;
   std::shared_ptr<SpriteBatchCommandBuffer> commandBuffer;
-  std::shared_ptr<SpriteBatchUniformBuffer> uniformBuffer;
+  std::shared_ptr<UniformBuffer> uniformBuffer;
   std::shared_ptr<GraphicsPipeline> graphicsPipeline;
   std::set<Entity> entities;
   Buffer vertexBuffer;

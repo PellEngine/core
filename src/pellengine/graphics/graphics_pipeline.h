@@ -4,10 +4,13 @@
 #include "src/pellengine/vulkan/vulkan_wrapper.h"
 #include "src/pellengine/graphics/window.h"
 #include "src/pellengine/graphics/uniform_buffer.h"
+#include "src/pellengine/graphics/descriptor_set_provider.h"
 #include "src/pellengine/io/asset_reader.h"
 #include <string>
 #include <optional>
 #include <memory>
+#include <set>
+#include <unordered_map>
 
 namespace pellengine {
 
@@ -30,13 +33,13 @@ struct VertexConfiguration {
   std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
 };
 
-struct UniformBufferConfiguration {
-  std::vector<std::shared_ptr<UniformBuffer>> uniformBuffers;
+struct DescriptorSetConfiguration {
+  std::vector<std::shared_ptr<DescriptorSetProvider>> descriptorSetProviders;
 };
 
 class GraphicsPipeline {
  public:
-  GraphicsPipeline(std::shared_ptr<Window> window, ShaderConfiguration shaderConfiguration, VertexConfiguration vertexConfiguration, UniformBufferConfiguration uniformBufferConfiguration);
+  GraphicsPipeline(std::shared_ptr<Window> window, ShaderConfiguration shaderConfiguration, VertexConfiguration vertexConfiguration, DescriptorSetConfiguration descriptorSetConfiguration);
   ~GraphicsPipeline();
 
   GraphicsPipeline(const GraphicsPipeline&) = delete;
@@ -53,7 +56,7 @@ class GraphicsPipeline {
     return pipelineLayout;
   }
 
-  std::vector<std::vector<VkDescriptorSet>>& getDescriptorSets() {
+  std::vector<VkDescriptorSet>& getDescriptorSets() {
     return descriptorSets;
   }
 
@@ -61,14 +64,15 @@ class GraphicsPipeline {
   bool initialized = false;;
   ShaderConfiguration shaderConfiguration;
   VertexConfiguration vertexConfiguration;
-  UniformBufferConfiguration uniformBufferConfiguration;
+  DescriptorSetConfiguration descriptorSetConfiguration;
   std::shared_ptr<Window> window;
   VkPipelineLayout pipelineLayout;
   VkPipeline pipeline;
-  std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
-  std::vector<std::vector<VkDescriptorSet>> descriptorSets;
+  VkDescriptorSetLayout descriptorSetLayout;
+  std::vector<VkDescriptorSet> descriptorSets;
   VkDescriptorPool descriptorPool;
 
+  void createDescriptorSetLayout();
   void createDescriptorPool();
   void createDescriptorSets();
   void createShaderModule(std::vector<char>& code, VkShaderModule* shaderModule);
