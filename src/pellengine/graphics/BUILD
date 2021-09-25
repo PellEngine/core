@@ -18,12 +18,16 @@ cc_binary(
     "descriptor_set_provider.h",
     "graphics_pipeline.cpp",
     "graphics_pipeline.h",
+    "image.cpp",
+    "image.h",
     "instance.cpp",
     "instance.h",
     "renderer.cpp",
     "renderer.h",
     "swapchain_recreator.cpp",
     "swapchain_recreator.h",
+    "texture.cpp",
+    "texture.h",
     "uniform_buffer.cpp",
     "uniform_buffer.h",
     "window.cpp",
@@ -32,7 +36,8 @@ cc_binary(
   deps = [
     "//src/pellengine/vulkan:vulkan",
     "//src/pellengine/io:io",
-    "@ctti//:ctti"
+    "@ctti//:ctti",
+    "@stb//:stb",
   ]
 )
 
@@ -45,9 +50,11 @@ cc_library(
     "command_buffer.h",
     "descriptor_set_provider.h",
     "graphics_pipeline.h",
+    "image.h",
     "instance.h",
     "renderer.h",
     "swapchain_recreator.h",
+    "texture.h",
     "uniform_buffer.h",
     "window.h",
   ]

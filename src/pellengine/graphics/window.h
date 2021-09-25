@@ -28,6 +28,8 @@ class Window {
   void terminate();
   void recreateSwapChain();
   void terminateSwapChain();
+  VkCommandBuffer startCommandBuffer();
+  void endCommandBuffer(VkCommandBuffer commandBuffer);
 
   std::vector<VkImageView>& getSwapChainImageViews() {
     return swapChainImageViews;

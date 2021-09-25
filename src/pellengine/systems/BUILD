@@ -24,6 +24,7 @@ cc_binary(
     "//src/pellengine/ecs:ecs",
     "//src/pellengine/io:io",
     "@glm//:glm",
+    "@stb//:stb"
   ]
 )
 

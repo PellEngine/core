@@ -25,5 +25,11 @@ new_local_repository(
   build_file = "src/third_party/glm.BUILD"
 )
 
+new_local_repository(
+  name = "stb",
+  path = "src/stb/",
+  build_file = "src/third_party/stb.BUILD"
+)
+
 load("@rules_vulkan//vulkan:repositories.bzl", "vulkan_repositories")
 vulkan_repositories()
