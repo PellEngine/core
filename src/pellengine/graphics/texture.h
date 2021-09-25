@@ -1,13 +1,17 @@
 #ifndef _PELLENGINE_GRAPHICS_TEXTURE_H_
 #define _PELLENGINE_GRAPHICS_TEXTURE_H_
 
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_STATIC
 #include "src/pellengine/graphics/window.h"
 #include "src/pellengine/graphics/image.h"
 #include "src/pellengine/io/asset_reader.h"
 #include <string>
-#include <stb/stb_image.h>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+  #define STB_IMAGE_IMPLEMENTATION
+  #define STB_IMAGE_STATIC
+  #include <stb/stb_image.h>
+#pragma GCC diagnostic pop
 
 namespace pellengine {
 
