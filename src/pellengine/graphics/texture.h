@@ -26,11 +26,21 @@ class Texture {
   void initialize();
   void terminate();
 
+  VkImageView getImageView() {
+    return textureImageView;
+  }
+
+  VkSampler getSampler() {
+    return textureSampler;
+  }
+
  private:
   bool initialized = false;
   std::shared_ptr<Window> window;
   std::string fileName;
   Image* textureImage;
+  VkImageView textureImageView;
+  VkSampler textureSampler;
 };
 
 }

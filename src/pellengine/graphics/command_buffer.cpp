@@ -2,8 +2,7 @@
 
 namespace pellengine {
 
-CommandBuffer::CommandBuffer(std::shared_ptr<Window> window, PipelineConfiguration pipelineConfiguration) : window(window), pipelineConfiguration(pipelineConfiguration) {}
-
+CommandBuffer::CommandBuffer(std::shared_ptr<Window> window) : window(window) {}
 CommandBuffer::~CommandBuffer() {}
 
 void CommandBuffer::initialize() {
@@ -22,7 +21,6 @@ void CommandBuffer::initialize() {
 
   initialized = true;
 }
-
 void CommandBuffer::terminate() {
   if(!initialized) return;
   vkFreeCommandBuffers(window->getInstance()->getDevice(), window->getCommandPool(), static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
@@ -45,6 +43,14 @@ void CommandBuffer::record(uint32_t i) {
     throw std::runtime_error("Failed to begin recording command buffers.");
   }
 
+  draw(commandBuffers[i], i);
+
+  if(vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
+    throw std::runtime_error("Failed to record command buffer.");
+  }
+}
+
+void CommandBuffer::beginRenderPass(uint32_t i) {
   VkRenderPassBeginInfo renderPassInfo{};
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderPassInfo.renderPass = window->getTransparentRenderPass();
@@ -53,20 +59,14 @@ void CommandBuffer::record(uint32_t i) {
   renderPassInfo.renderArea.extent = window->getSwapChainExtent();
   
   vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-  
-  switch(pipelineConfiguration.bindPoint) {
-    case VK_PIPELINE_BIND_POINT_GRAPHICS: {
-      vkCmdBindPipeline(commandBuffers[i], pipelineConfiguration.bindPoint, pipelineConfiguration.graphicsPipeline.value()->getPipeline());
-      break;
-    }
-  }
+}
 
-  draw(commandBuffers[i], i);
-
+void CommandBuffer::endRenderPass(uint32_t i) {
   vkCmdEndRenderPass(commandBuffers[i]);
-  if(vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
-    throw std::runtime_error("Failed to record command buffer.");
-  }
+}
+
+void CommandBuffer::bindPipeline(uint32_t i, VkPipelineBindPoint bindPoint, VkPipeline pipeline) {
+  vkCmdBindPipeline(commandBuffers[i], bindPoint, pipeline);
 }
 
 }

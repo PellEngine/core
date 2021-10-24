@@ -8,6 +8,7 @@ filegroup(
     "//src/pellengine/io:io",
     "//src/pellengine/vulkan:vulkan",
     "//src/pellengine/systems:sprite_batch",
+    "//src/pellengine/renderers:renderers"
   ]
 )
 
@@ -18,6 +19,7 @@ compilation_database(
     "//src/pellengine/io:libio.so",
     "//src/pellengine/vulkan:libpellengine_vulkan.so",
     "//src/pellengine/systems:libsprite_batch.so",
-    "//src/pellengine/ecs:ecs"
+    "//src/pellengine/ecs:ecs",
+    "//src/pellengine/renderers:librenderers.so"
   ]
 )

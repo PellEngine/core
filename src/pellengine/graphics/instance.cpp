@@ -227,6 +227,7 @@ void Instance::createLogicalDevice() {
   }
 
   VkPhysicalDeviceFeatures deviceFeatures{};
+  deviceFeatures.samplerAnisotropy = VK_TRUE;
 
   VkDeviceCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -304,7 +305,10 @@ bool Instance::isDeviceSuitable(VkPhysicalDevice device) {
 
   bool extensionsSupported = checkDeviceExtensionSupport(device);
 
-  return indices.isComplete() && extensionsSupported;
+  VkPhysicalDeviceFeatures supportedFeatures;
+  vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
+
+  return indices.isComplete() && extensionsSupported && supportedFeatures.samplerAnisotropy;
 }
 
 QueueFamilyIndices Instance::findQueueFamilies(VkPhysicalDevice device) {

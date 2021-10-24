@@ -2,7 +2,12 @@
 
 namespace pellengine {
 
-SpriteBatch::SpriteBatch(std::shared_ptr<Window> window, std::shared_ptr<EntityComponentSystem> ecs) : window(window), ecs(ecs) {}
+SpriteBatch::SpriteBatch(std::shared_ptr<Window> window, std::shared_ptr<EntityComponentSystem> ecs, std::shared_ptr<Renderer2D> renderer) : window(window), ecs(ecs), renderer(renderer) {
+  this->uniformBuffer = std::make_shared<UniformBuffer>(window, sizeof(SpriteBatchUniformBufferObject));
+  this->pipeline = std::make_shared<SpriteBatchPipeline>(window, uniformBuffer);
+  SwapChainRecreator::registerGraphicsPipeline(this->pipeline);
+  SwapChainRecreator::registerUniformBuffer(this->uniformBuffer);
+}
 SpriteBatch::~SpriteBatch() {}
 
 /*
@@ -11,9 +16,13 @@ SpriteBatch::~SpriteBatch() {}
   ----------------------------------------------------
 */
 void SpriteBatch::initialize() {
+  //Initialize uniform buffer
+  uniformBuffer->initialize();
+
   // Initialize all the layers
   if(initialized) return;
   initialized = true;
+  pipeline->initialize();
   for(std::shared_ptr<SpriteBatchLayer> layer : layers) {
     layer->initialize();
   }
@@ -25,6 +34,8 @@ void SpriteBatch::terminate() {
   for(std::shared_ptr<SpriteBatchLayer> layer : layers) {
     layer->terminate();
   }
+  pipeline->terminate();
+  uniformBuffer->terminate();
 }
 
 /*
@@ -49,13 +60,13 @@ void SpriteBatch::entityInserted(Entity entity) {
 
   // Create new sprite batch layer and add entity
   if(!added) {
-    std::shared_ptr<SpriteBatchLayer> layer = std::make_shared<SpriteBatchLayer>(window, ecs);
+    std::shared_ptr<SpriteBatchLayer> layer = std::make_shared<SpriteBatchLayer>(window, ecs, pipeline);
     if(initialized) {
       layer->initialize();
     }
     
     layers.push_back(layer);
-    commandBuffers.push_back(layer->getCommandBuffer());
+    renderer->addRenderable(layer);
     layer->addSprite(entity);
     entityToLayer.insert({ entity, layers.size() - 1 }); 
   }
@@ -78,6 +89,13 @@ void SpriteBatch::entityErased(Entity entity) {
   ----------------------------
 */
 void SpriteBatch::updateLayers(uint32_t imageIndex) {
+  // Update uniform buffer
+  SpriteBatchUniformBufferObject ubo{};
+  ubo.proj = glm::ortho(0.0f, (float)window->getSwapChainExtent().width, 0.0f, (float)window->getSwapChainExtent().height);
+  void* data = uniformBuffer->map(imageIndex);
+  memcpy(data, &ubo, sizeof(ubo));
+  uniformBuffer->unmap(imageIndex, data);
+
   for(std::shared_ptr<SpriteBatchLayer> layer : layers) {
     layer->update(imageIndex);
   }

@@ -3,50 +3,31 @@
 
 #include "src/pellengine/vulkan/vulkan_wrapper.h"
 #include "src/pellengine/graphics/window.h"
-#include "src/pellengine/graphics/uniform_buffer.h"
-#include "src/pellengine/graphics/descriptor_set_provider.h"
-#include "src/pellengine/io/asset_reader.h"
-#include <string>
-#include <optional>
+#include "src/pellengine/graphics/descriptor_builder.h"
+#include "src/pellengine/graphics/shader.h"
 #include <memory>
-#include <set>
-#include <unordered_map>
+#include <vector>
 
 namespace pellengine {
 
-struct ShaderConfiguration {
-  std::optional<std::string> vertexShader;
-  std::optional<std::string> fragmentShader;
-  std::optional<std::string> tesselationShader;
-  std::optional<std::string> geometryShader;
-
-  static const ShaderConfiguration test() {
-    return {
-      "shaders/test.vert.spv",
-      "shaders/test.frag.spv"
-    };
-  }
-};
-
-struct VertexConfiguration {
-  std::vector<VkVertexInputBindingDescription> bindingDescriptions;
-  std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
-};
-
-struct DescriptorSetConfiguration {
-  std::vector<std::shared_ptr<DescriptorSetProvider>> descriptorSetProviders;
+struct PipelineConfiguration {
+  VkPipelineInputAssemblyStateCreateInfo* inputAssembly;
+  VkPipelineViewportStateCreateInfo* viewportState;
+  VkPipelineRasterizationStateCreateInfo* rasterizer;
+  VkPipelineMultisampleStateCreateInfo* multisampling;
+  VkPipelineColorBlendStateCreateInfo* colorBlending;
 };
 
 class GraphicsPipeline {
  public:
-  GraphicsPipeline(std::shared_ptr<Window> window, ShaderConfiguration shaderConfiguration, VertexConfiguration vertexConfiguration, DescriptorSetConfiguration descriptorSetConfiguration);
-  ~GraphicsPipeline();
+  GraphicsPipeline(std::shared_ptr<Window> window);
+  virtual ~GraphicsPipeline();
 
   GraphicsPipeline(const GraphicsPipeline&) = delete;
   GraphicsPipeline& operator=(const GraphicsPipeline&) = delete;
 
-  void initialize();
-  void terminate();
+  virtual void initialize() = 0;
+  virtual void terminate() = 0;
 
   VkPipeline getPipeline() {
     return pipeline;
@@ -56,26 +37,33 @@ class GraphicsPipeline {
     return pipelineLayout;
   }
 
-  std::vector<VkDescriptorSet>& getDescriptorSets() {
+  std::vector<std::vector<VkDescriptorSet>>& getDescriptorSets() {
     return descriptorSets;
   }
 
- private:
-  bool initialized = false;;
-  ShaderConfiguration shaderConfiguration;
-  VertexConfiguration vertexConfiguration;
-  DescriptorSetConfiguration descriptorSetConfiguration;
+ protected:
+  bool initialized = false;
   std::shared_ptr<Window> window;
-  VkPipelineLayout pipelineLayout;
-  VkPipeline pipeline;
-  VkDescriptorSetLayout descriptorSetLayout;
-  std::vector<VkDescriptorSet> descriptorSets;
-  VkDescriptorPool descriptorPool;
 
-  void createDescriptorSetLayout();
-  void createDescriptorPool();
-  void createDescriptorSets();
-  void createShaderModule(std::vector<char>& code, VkShaderModule* shaderModule);
+  void createPipeline(PipelineConfiguration& pipelineConfiguration);
+  void terminatePipeline();
+  
+  void addShader(std::shared_ptr<Shader> shader);
+  void addDescriptorBuilder(DescriptorBuilder builder);
+  void addBindingDescription(VkVertexInputBindingDescription bindingDescription);
+  void addAttributeDescription(VkVertexInputAttributeDescription attributeDescription);
+
+ private:
+  std::vector<std::shared_ptr<Shader>> shaders;
+  std::vector<DescriptorBuilder> descriptorBuilders;
+
+  VkPipeline pipeline;
+  VkPipelineLayout pipelineLayout;
+  std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+  std::vector<VkVertexInputBindingDescription> bindingDescriptions;
+  std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+  std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+  std::vector<std::vector<VkDescriptorSet>> descriptorSets;
 };
 
 }

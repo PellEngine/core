@@ -1,31 +1,17 @@
 #ifndef _PELLENGINE_GRAPHICS_COMMAND_BUFFER_H_
 #define _PELLENGINE_GRAPHICS_COMMAND_BUFFER_H_
 
-#include "src/pellengine/vulkan/vulkan_wrapper.h"
 #include "src/pellengine/graphics/window.h"
-#include "src/pellengine/graphics/graphics_pipeline.h"
-#include <optional>
-#include <memory>
+#include "src/pellengine/vulkan/vulkan_wrapper.h"
+#include <vector>
 
 namespace pellengine {
 
-struct PipelineConfiguration {
-  std::optional<GraphicsPipeline*> graphicsPipeline;
-  VkPipelineBindPoint bindPoint;
-
-  static const PipelineConfiguration generateGraphicsPipelineConfiguration(std::shared_ptr<GraphicsPipeline> pipeline) {
-    PipelineConfiguration configuration{};
-    configuration.graphicsPipeline = pipeline.get();
-    configuration.bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    return configuration;
-  }
-};
-
 class CommandBuffer {
  public:
-  CommandBuffer(std::shared_ptr<Window> window, PipelineConfiguration pipelineConfiguration);
+  CommandBuffer(std::shared_ptr<Window> window);
   virtual ~CommandBuffer();
-  
+
   CommandBuffer(const CommandBuffer&) = delete;
   CommandBuffer& operator=(const CommandBuffer&) = delete;
 
@@ -38,15 +24,18 @@ class CommandBuffer {
     return commandBuffers;
   }
 
- private:
-  bool initialized = false;
-
  protected:
   std::shared_ptr<Window> window;
-  PipelineConfiguration pipelineConfiguration;
   std::vector<VkCommandBuffer> commandBuffers;
 
   virtual void draw(VkCommandBuffer& buffer, uint32_t imageIndex) = 0;
+  
+  void beginRenderPass(uint32_t i);
+  void endRenderPass(uint32_t i);
+  void bindPipeline(uint32_t i, VkPipelineBindPoint bindPoint, VkPipeline pipeline);
+
+ private:
+  bool initialized = false;
 };
 
 }

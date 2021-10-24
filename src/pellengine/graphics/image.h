@@ -28,6 +28,10 @@ class Image {
   void transitionImageLayout(VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
   void copyBuffer(VkBuffer buffer);
 
+  VkImage getImage() {
+    return image;
+  }
+
  private:
   bool initialized = false;
   std::shared_ptr<Window> window;

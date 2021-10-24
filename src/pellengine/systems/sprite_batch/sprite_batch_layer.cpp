@@ -1,32 +1,13 @@
 #include "sprite_batch_layer.h"
-#include "math.h"
 
 namespace pellengine {
-  
-SpriteBatchLayer::SpriteBatchLayer(std::shared_ptr<Window> window, std::shared_ptr<EntityComponentSystem> ecs) : window(window), ecs(ecs) {
-  this->uniformBuffer = std::make_shared<UniformBuffer>(0, window, sizeof(SpriteBatchUniformBufferObject));
 
-  this->graphicsPipeline = std::make_shared<GraphicsPipeline>(
-    window,
-    ShaderConfiguration::test(),
-    SpriteBatchVertex::getVertexConfiguration(),
-    DescriptorSetConfiguration{
-      .descriptorSetProviders = {uniformBuffer}
-    }
-  );
-
-  this->commandBuffer = std::make_shared<SpriteBatchCommandBuffer>(window, PipelineConfiguration::generateGraphicsPipelineConfiguration(graphicsPipeline), &vertexBuffer, &indexBuffer, SPRITE_BATCH_MAX_SPRITES * 6, graphicsPipeline);
-  SwapChainRecreator::registerCommandBuffer(commandBuffer);
-  SwapChainRecreator::registerGraphicsPipeline(graphicsPipeline);
-  SwapChainRecreator::registerUniformBuffer(uniformBuffer);
+SpriteBatchLayer::SpriteBatchLayer(std::shared_ptr<Window> window, std::shared_ptr<EntityComponentSystem> ecs, std::shared_ptr<SpriteBatchPipeline> pipeline) : window(window), ecs(ecs), pipeline(pipeline) {}
+SpriteBatchLayer::~SpriteBatchLayer() {
+  terminate();
 }
 
-SpriteBatchLayer::~SpriteBatchLayer() {}
-
 void SpriteBatchLayer::initialize() {
-  uniformBuffer->initialize();
-  graphicsPipeline->initialize();
-  
   createBuffer(
     window,
     &vertexBuffer,
@@ -62,17 +43,11 @@ void SpriteBatchLayer::initialize() {
   for(const Entity& entity : entities) {
     loadVertexProperties(entity, entityToIndex[entity]);
   }
-
-  commandBuffer->initialize();
-  commandBuffer->recordAll();
 }
 
 void SpriteBatchLayer::terminate() {
-  uniformBuffer->terminate();
-  commandBuffer->terminate();
   terminateBuffer(window, &vertexBuffer);
   terminateBuffer(window, &indexBuffer);
-  graphicsPipeline->terminate();
 }
 
 void SpriteBatchLayer::addSprite(Entity entity) {
@@ -105,11 +80,11 @@ void SpriteBatchLayer::loadVertexProperties(Entity entity, uint32_t index) {
   Sprite& sprite = ecs->getComponent<Sprite>(entity);
   Transform& transform = ecs->getComponent<Transform>(entity);
   int offset = index * 4;
-  vertices[offset + 0] = {{transform.position.x, transform.position.y, sprite.zIndex}, sprite.color};
-  vertices[offset + 1] = {{transform.position.x  + transform.scale.x, transform.position.y, sprite.zIndex}, sprite.color};
-  vertices[offset + 2] = {{transform.position.x + transform.scale.x, transform.position.y + transform.scale.y, sprite.zIndex}, sprite.color};
-  vertices[offset + 3] = {{transform.position.x, transform.position.y + transform.scale.y, sprite.zIndex}, sprite.color};
-  commandBufferFresh.clear();
+  vertices[offset + 0] = {{transform.position.x, transform.position.y, sprite.zIndex}, sprite.color, {1.0f, 0.0f}};
+  vertices[offset + 1] = {{transform.position.x  + transform.scale.x, transform.position.y, sprite.zIndex}, sprite.color, {0.0f, 0.0f}};
+  vertices[offset + 2] = {{transform.position.x + transform.scale.x, transform.position.y + transform.scale.y, sprite.zIndex}, sprite.color, {0.0f, 1.0f}};
+  vertices[offset + 3] = {{transform.position.x, transform.position.y + transform.scale.y, sprite.zIndex}, sprite.color, {1.0f, 1.0f}};
+  outdatedBuffer = true;
 }
 
 void SpriteBatchLayer::update(uint32_t imageIndex) {
@@ -122,26 +97,28 @@ void SpriteBatchLayer::update(uint32_t imageIndex) {
     }
   }
 
-  if(!commandBufferFresh[imageIndex]) {
-    void* vertexData;
-    vkMapMemory(window->getInstance()->getDevice(), vertexBuffer.bufferMemory, 0, sizeof(SpriteBatchVertex) * vertices.size(), 0, &vertexData);
+  if(outdatedBuffer) {
+    void* vertexData = vertexBuffer.map(window, 0, sizeof(SpriteBatchVertex) * vertices.size());
     memcpy(vertexData, vertices.data(), (size_t) sizeof(SpriteBatchVertex) * vertices.size());
-    vkUnmapMemory(window->getInstance()->getDevice(), vertexBuffer.bufferMemory);
+    vertexBuffer.unmap(window);
 
-    void* indexData;
-    vkMapMemory(window->getInstance()->getDevice(), indexBuffer.bufferMemory, 0, sizeof(uint16_t) * indices.size(), 0, &indexData);
+    void* indexData = indexBuffer.map(window, 0, sizeof(uint16_t) * indices.size());
     memcpy(indexData, indices.data(), (size_t) sizeof(uint16_t) * indices.size());
-    vkUnmapMemory(window->getInstance()->getDevice(), indexBuffer.bufferMemory);
+    indexBuffer.unmap(window);
 
-    commandBuffer->record(imageIndex);
-    commandBufferFresh[imageIndex] = true;
+    outdatedBuffer = false;
   }
+}
 
-  SpriteBatchUniformBufferObject ubo{};
-  ubo.proj = glm::ortho(0.0f, (float)window->getSwapChainExtent().width, 0.0f, (float)window->getSwapChainExtent().height);
-  void* data = uniformBuffer->map(imageIndex);
-  memcpy(data, &ubo, sizeof(ubo));
-  uniformBuffer->unmap(imageIndex, data);
+void SpriteBatchLayer::render(VkCommandBuffer& commandBuffer, uint32_t imageIndex) {
+  VkBuffer vertexBuffers[] = {this->vertexBuffer.buffer};
+  VkDeviceSize offsets[] = {0};
+  
+  vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getPipeline());
+  vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getPipelineLayout(), 0, 1, &pipeline->getDescriptorSets()[0][imageIndex], 0, nullptr);
+  vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+  vkCmdBindIndexBuffer(commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
+  vkCmdDrawIndexed(commandBuffer, SPRITE_BATCH_MAX_SPRITES * 6, 1, 0, 0, 0);
 }
 
 }

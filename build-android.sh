@@ -23,6 +23,7 @@ copy_shared_libraries() {
   cp -rp "$bazel_prefix/io/libio.so" "$android_prefix/libio.so"
   cp -rp "$bazel_prefix/systems/libsprite_batch.so" "$android_prefix/libsprite_batch.so"
   cp -rp "$bazel_prefix/vulkan/libpellengine_vulkan.so" "$android_prefix/libpellengine_vulkan.so"
+  cp -rp "$bazel_prefix/renderers/librenderers.so" "$android_prefix/librenderers.so"
 }
 
 echo ""

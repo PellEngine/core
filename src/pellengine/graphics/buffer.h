@@ -5,7 +5,6 @@
 #include "src/pellengine/vulkan/vulkan_wrapper.h"
 #include <memory>
 #include "window.h"
-#include <ctti/type_id.hpp>
 
 namespace pellengine {
 
