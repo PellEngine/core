@@ -32,6 +32,14 @@ class Image {
     return image;
   }
 
+  uint32_t getWidth() {
+    return width;
+  }
+
+  uint32_t getHeight() {
+    return height;
+  }
+
  private:
   bool initialized = false;
   std::shared_ptr<Window> window;

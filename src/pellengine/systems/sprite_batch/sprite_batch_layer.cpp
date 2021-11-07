@@ -2,12 +2,18 @@
 
 namespace pellengine {
 
-SpriteBatchLayer::SpriteBatchLayer(std::shared_ptr<Window> window, std::shared_ptr<EntityComponentSystem> ecs, std::shared_ptr<SpriteBatchPipeline> pipeline) : window(window), ecs(ecs), pipeline(pipeline) {}
+SpriteBatchLayer::SpriteBatchLayer(std::shared_ptr<Window> window, std::shared_ptr<EntityComponentSystem> ecs, std::shared_ptr<UniformBuffer> uniformBuffer) : window(window), ecs(ecs) {
+  allocator = std::make_shared<DescriptorAllocator>(window);
+  pipeline = std::make_shared<SpriteBatchPipeline>(window, uniformBuffer, allocator, SPRITE_BATCH_MAX_TEXTURES);
+  SwapChainRecreator::registerGraphicsPipeline(this->pipeline);
+}
 SpriteBatchLayer::~SpriteBatchLayer() {
   terminate();
 }
 
 void SpriteBatchLayer::initialize() {
+  if(initialized) return;
+
   createBuffer(
     window,
     &vertexBuffer,
@@ -43,18 +49,43 @@ void SpriteBatchLayer::initialize() {
   for(const Entity& entity : entities) {
     loadVertexProperties(entity, entityToIndex[entity]);
   }
+
+  pipeline->initialize();
+  initialized = true;
 }
 
 void SpriteBatchLayer::terminate() {
+  if(!initialized) return;
+  pipeline->terminate();
+  allocator->terminate();
   terminateBuffer(window, &vertexBuffer);
   terminateBuffer(window, &indexBuffer);
+  initialized = false;
 }
 
 void SpriteBatchLayer::addSprite(Entity entity) {
+  // Check if we need to load a new sprite sheet
+  Sprite& sprite = ecs->getComponent<Sprite>(entity);
+  if(!hasSpriteSheet(sprite.spriteSheet) && !hasTextureRoom()) {
+    throw std::runtime_error("Added sprite to full sprite batch layer");
+  }
+
+  // Load in new sprite sheet
+  if(!hasSpriteSheet(sprite.spriteSheet) && hasTextureRoom()) {
+    pipeline->addSpriteSheet(sprite.spriteSheet);
+  }
+
+  // Find TextureID
+  auto it = std::find(pipeline->getSpriteSheets().begin(), pipeline->getSpriteSheets().end(), sprite.spriteSheet);
+  int textureID = std::distance(pipeline->getSpriteSheets().begin(), it);
+  entityToTextureID[entity] = textureID;
+
   uint32_t newIndex = numSprites;
   entityToIndex[entity] = newIndex;
   indexToEntity[newIndex] = entity;
-  loadVertexProperties(entity, newIndex);
+  if(initialized) {
+    loadVertexProperties(entity, newIndex);
+  }
   entities.insert(entity);
   numSprites++;
 }
@@ -73,17 +104,46 @@ void SpriteBatchLayer::removeSprite(Entity entity) {
   vertices[offset + 2] = {};
   vertices[offset + 3] = {};
 
-  loadVertexProperties(lastEntity, entityIndex);
+  if(initialized) {
+    loadVertexProperties(lastEntity, entityIndex);
+  }
 }
 
 void SpriteBatchLayer::loadVertexProperties(Entity entity, uint32_t index) {
   Sprite& sprite = ecs->getComponent<Sprite>(entity);
   Transform& transform = ecs->getComponent<Transform>(entity);
   int offset = index * 4;
-  vertices[offset + 0] = {{transform.position.x, transform.position.y, sprite.zIndex}, sprite.color, {1.0f, 0.0f}};
-  vertices[offset + 1] = {{transform.position.x  + transform.scale.x, transform.position.y, sprite.zIndex}, sprite.color, {0.0f, 0.0f}};
-  vertices[offset + 2] = {{transform.position.x + transform.scale.x, transform.position.y + transform.scale.y, sprite.zIndex}, sprite.color, {0.0f, 1.0f}};
-  vertices[offset + 3] = {{transform.position.x, transform.position.y + transform.scale.y, sprite.zIndex}, sprite.color, {1.0f, 1.0f}};
+
+  std::array<glm::vec2, 4>& texCoords = sprite.spriteSheet->getTexCoords(sprite.spritePos.x, sprite.spritePos.y);
+
+  vertices[offset + 0] = SpriteBatchVertex{
+    .pos = glm::vec3(transform.position.x, transform.position.y, sprite.zIndex),
+    .color = sprite.color,
+    .texCoord = texCoords[0],
+    .textureID = entityToTextureID[entity]
+  };
+
+  vertices[offset + 1] = SpriteBatchVertex{
+    .pos = glm::vec3(transform.position.x  + transform.scale.x, transform.position.y, sprite.zIndex),
+    .color = sprite.color,
+    .texCoord = texCoords[1],
+    .textureID = entityToTextureID[entity]
+  };
+
+  vertices[offset + 2] = SpriteBatchVertex{
+    .pos = glm::vec3(transform.position.x + transform.scale.x, transform.position.y + transform.scale.y, sprite.zIndex),
+    .color = sprite.color,
+    .texCoord = texCoords[2],
+    .textureID = entityToTextureID[entity]
+  };
+
+  vertices[offset + 3] = SpriteBatchVertex{
+    .pos = glm::vec3(transform.position.x, transform.position.y + transform.scale.y, sprite.zIndex),
+    .color = sprite.color,
+    .texCoord = texCoords[3],
+    .textureID = entityToTextureID[entity]
+  };
+
   outdatedBuffer = true;
 }
 

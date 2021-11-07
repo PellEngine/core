@@ -8,10 +8,6 @@
 #include <optional>
 #include <set>
 
-#ifdef ANDROID
-  #include <android/native_activity.h>
-#endif
-
 namespace pellengine {
 
 struct QueueFamilyIndices {
@@ -26,7 +22,7 @@ struct QueueFamilyIndices {
 class Instance {
  public:
   Instance(const std::string name, bool enableValidationLayers);
-  ~Instance();
+  virtual ~Instance();
 
   Instance(const Instance&) = delete;
   Instance& operator=(const Instance&) = delete;
@@ -34,19 +30,13 @@ class Instance {
   void initialize();
   void terminate();
   
-  int getWidth();
-  int getHeight();
+  virtual int getWidth() = 0;
+  virtual int getHeight() = 0;
   QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
   bool isInitialized() {
     return initialized;
   }
-
-  #ifdef ANDROID
-    void setAndroidPlatformWindow(ANativeWindow* window) {
-      androidPlatformWindow = window;
-    }
-  #endif
 
   VkInstance getInstance() {
     return instance;
@@ -72,7 +62,7 @@ class Instance {
     return presentQueue;
   }
 
- private:
+ protected:
   VkInstance instance;
   VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
   VkDevice device;
@@ -82,17 +72,13 @@ class Instance {
   VkQueue graphicsQueue;
   VkQueue presentQueue;
 
-  #ifdef ANDROID
-    ANativeWindow* androidPlatformWindow;
-  #endif
-
   bool enableValidationLayers;
   bool initialized;
   std::string name;
 
   void createInstance();
   void setupDebugMessenger();
-  void createSurface();
+  virtual void createSurface() = 0;
   void pickPhysicalDevice();
   void createLogicalDevice();
 
@@ -100,6 +86,7 @@ class Instance {
   void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
   bool isDeviceSuitable(VkPhysicalDevice device);
   bool checkDeviceExtensionSupport(VkPhysicalDevice device);
+  virtual void getInstanceExtensions(std::vector<const char*>& instanceExtensions) = 0;
 
   const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
   const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };

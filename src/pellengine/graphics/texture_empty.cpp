@@ -1,30 +1,22 @@
-#include "texture.h"
+#include "texture_empty.h"
 
 namespace pellengine {
 
-Texture::Texture(std::shared_ptr<Window> window, std::string fileName) : window(window), fileName(fileName) {}
-Texture::~Texture() {
+TextureEmpty::TextureEmpty(std::shared_ptr<Window> window) : window(window) {}
+TextureEmpty::~TextureEmpty() {
   terminate();
 }
 
-void Texture::initialize() {
+void TextureEmpty::initialize() {
   if(initialized) return;
-  // Load image pixels
-  std::vector<char> textureBuffer;
-  size_t textureBufferLength = IOLocator::getAssetReader()->getFileLength(fileName);
-  textureBuffer.resize(textureBufferLength);
-  IOLocator::getAssetReader()->getFileBuffer(fileName, textureBuffer);
-
-  int width, height, channels;
-  stbi_uc* pixels = stbi_load_from_memory((stbi_uc*)textureBuffer.data(), textureBufferLength, &width, &height, &channels, STBI_rgb_alpha); 
+  // Pixel-array describing one black pixel.
+  unsigned char pixels[] = {0, 0, 0, 0};
+  int width = 1;
+  int height = 1;
   VkDeviceSize imageSize = width * height * 4;
 
-  if(!pixels) {
-    throw std::runtime_error("Failed to load texture");
-  }
-
   // Create staging buffer
-  Buffer stagingBuffer; 
+  Buffer stagingBuffer;
   createBuffer(
     window,
     &stagingBuffer,
@@ -37,7 +29,6 @@ void Texture::initialize() {
   void* data = stagingBuffer.map(window, 0, imageSize);
   memcpy(data, pixels, static_cast<size_t>(imageSize));
   stagingBuffer.unmap(window);
-  stbi_image_free(pixels);
 
   textureImage = new Image(
     window,
@@ -103,7 +94,7 @@ void Texture::initialize() {
   initialized = true;
 }
 
-void Texture::terminate() {
+void TextureEmpty::terminate() {
   if(!initialized) return;
   vkDestroySampler(window->getInstance()->getDevice(), textureSampler, nullptr);
   vkDestroyImageView(window->getInstance()->getDevice(), textureImageView, nullptr);

@@ -41,6 +41,10 @@ class GraphicsPipeline {
     return descriptorSets;
   }
 
+ std::vector<VkDescriptorSetLayout>& getDescriptorSetLayouts() {
+    return descriptorSetLayouts;
+  }
+
  protected:
   bool initialized = false;
   std::shared_ptr<Window> window;

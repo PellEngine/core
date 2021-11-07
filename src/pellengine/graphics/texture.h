@@ -3,7 +3,7 @@
 
 #include "src/pellengine/graphics/window.h"
 #include "src/pellengine/graphics/image.h"
-#include "src/pellengine/io/asset_reader.h"
+#include "src/pellengine/io/io_locator.h"
 #include <string>
 
 #pragma GCC diagnostic push
@@ -32,6 +32,14 @@ class Texture {
 
   VkSampler getSampler() {
     return textureSampler;
+  }
+
+  uint32_t getWidth() {
+    return textureImage->getWidth();
+  }
+
+  uint32_t getHeight() {
+    return textureImage->getHeight();
   }
 
  private:

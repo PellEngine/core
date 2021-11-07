@@ -14,6 +14,10 @@ void DescriptorAllocator::terminate() {
   for(auto pool : usedPools) {
     vkDestroyDescriptorPool(window->getInstance()->getDevice(), pool, nullptr);
   }
+
+  freePools.clear();
+  usedPools.clear();
+  currentPool = VK_NULL_HANDLE;
 }
 
 VkDescriptorPool DescriptorAllocator::createPool(PoolSizes& poolSizes, int numSets, VkDescriptorPoolCreateFlags flags) {

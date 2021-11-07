@@ -10,6 +10,7 @@ cc_binary(
   srcs = [
     "vulkan_android_wrapper.cpp",
     "vulkan_android_wrapper.h",
+    "vulkan_wrapper.h",
   ]
 )
 

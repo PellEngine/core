@@ -2,18 +2,26 @@
 
 namespace pellengine {
 
-SpriteBatchPipeline::SpriteBatchPipeline(std::shared_ptr<Window> window, std::shared_ptr<UniformBuffer> uniformBuffer) : GraphicsPipeline(window), uniformBuffer(uniformBuffer) {
-  texture = new Texture(window, "assets/test.jpg");
+SpriteBatchPipeline::SpriteBatchPipeline(std::shared_ptr<Window> window, std::shared_ptr<UniformBuffer> uniformBuffer, std::shared_ptr<DescriptorAllocator> allocator, uint32_t maxTextures) : GraphicsPipeline(window), uniformBuffer(uniformBuffer), allocator(allocator), maxTextures(maxTextures) {
+  for(uint32_t i=0;i<maxTextures;i++) {
+    emptyTextures.push_back(new TextureEmpty(window));
+  }
 }
 SpriteBatchPipeline::~SpriteBatchPipeline() {
   terminate();
-  delete texture;
+  for(TextureEmpty* texture : emptyTextures) {
+    delete texture;
+  }
+  emptyTextures.clear();
 }
 
 void SpriteBatchPipeline::initialize() {
   if(initialized) return;
 
-  texture->initialize();
+  // Initialize empty texture placeholder
+  for(TextureEmpty* texture : emptyTextures) {
+    texture->initialize();
+  }
 
   // Create shaders
   std::shared_ptr<Shader> vertexShader = std::make_shared<Shader>(window, "shaders/test.vert.spv", VK_SHADER_STAGE_VERTEX_BIT);
@@ -58,23 +66,26 @@ void SpriteBatchPipeline::initialize() {
     }
   );
 
-  // Setup descriptors
-  std::shared_ptr<DescriptorAllocator> allocator = std::make_shared<DescriptorAllocator>(window);
-  std::vector<VkDescriptorBufferInfo> bufferInfos;
-  bufferInfos.resize(window->getSwapChainImages().size());
-  for(size_t i=0;i<window->getSwapChainImages().size();i++) {
-    bufferInfos[i] = uniformBuffer->getDescriptorBufferInfo(i);
-  }
+  // Texture ID attribute
+  addAttributeDescription(
+    VkVertexInputAttributeDescription{
+      .binding = 0,
+      .location = 3,
+      .format = VK_FORMAT_R32_UINT,
+      .offset = offsetof(SpriteBatchVertex, textureID)
+    }
+  );
 
-  VkDescriptorImageInfo imageInfo{};
-  imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  imageInfo.imageView = texture->getImageView();
-  imageInfo.sampler = texture->getSampler();
+  // Setup descriptors
+  std::vector<VkDescriptorBufferInfo> bufferInfos;
+  std::vector<VkDescriptorImageInfo> imageInfos;
+  createBufferInfos(bufferInfos);
+  createImageInfos(imageInfos);
 
   addDescriptorBuilder(
     DescriptorBuilder::begin(window, allocator)
       .bindBuffer(0, bufferInfos.data(), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
-      .bindTexture(1, &imageInfo, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+      .bindTexture(1, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
   );
 
   // Setup pipeline configuration
@@ -165,10 +176,52 @@ void SpriteBatchPipeline::initialize() {
   initialized = true;
 }
 
+void SpriteBatchPipeline::createBufferInfos(std::vector<VkDescriptorBufferInfo>& bufferInfos) {
+  bufferInfos.resize(window->getSwapChainImages().size());
+  for(size_t i=0;i<window->getSwapChainImages().size();i++) {
+    bufferInfos[i] = uniformBuffer->getDescriptorBufferInfo(i);
+  }
+}
+
+void SpriteBatchPipeline::createImageInfos(std::vector<VkDescriptorImageInfo>& imageInfos) {
+  for(uint32_t i=0;i<maxTextures;i++) {
+    VkDescriptorImageInfo imageInfo{};
+    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    
+    if(i >= spriteSheets.size()) {
+      imageInfo.imageView = emptyTextures[i]->getImageView();
+      imageInfo.sampler = emptyTextures[i]->getSampler();
+    } else {
+      imageInfo.imageView = spriteSheets[i]->getTexture()->getImageView();
+      imageInfo.sampler = spriteSheets[i]->getTexture()->getSampler();
+    }
+
+    imageInfos.push_back(imageInfo);
+  }
+}
+
+void SpriteBatchPipeline::addSpriteSheet(std::shared_ptr<SpriteSheet> spriteSheet) {
+  spriteSheets.push_back(spriteSheet);
+  
+  if(initialized) {
+    std::vector<VkDescriptorBufferInfo> bufferInfos;
+    std::vector<VkDescriptorImageInfo> imageInfos;
+    createBufferInfos(bufferInfos);
+    createImageInfos(imageInfos);
+
+    DescriptorBuilder::begin(window, allocator)
+      .bindBuffer(0, bufferInfos.data(), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+      .bindTexture(1, imageInfos.data(), static_cast<uint32_t>(imageInfos.size()), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+      .build(window->getSwapChainImages().size(), getDescriptorSets()[0].data(), getDescriptorSetLayouts()[0]);
+  }
+}
+
 void SpriteBatchPipeline::terminate() {
   if(!initialized) return;
-  texture->terminate();
   terminatePipeline();
+  for(TextureEmpty* texture : emptyTextures) {
+    texture->terminate();
+  }
   initialized = false;
 }
 

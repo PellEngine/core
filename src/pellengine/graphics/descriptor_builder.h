@@ -14,7 +14,7 @@ class DescriptorBuilder {
   static DescriptorBuilder begin(std::shared_ptr<Window> window, std::shared_ptr<DescriptorAllocator> allocator);
 
   DescriptorBuilder& bindBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo, VkDescriptorType type, VkShaderStageFlags stageFlags);
-  DescriptorBuilder& bindTexture(uint32_t binding, VkDescriptorImageInfo* imageInfo, VkDescriptorType type, VkShaderStageFlags);
+  DescriptorBuilder& bindTexture(uint32_t binding, VkDescriptorImageInfo* imageInfo, uint32_t imageInfoCount, VkDescriptorType type, VkShaderStageFlags);
 
   bool build(uint32_t descriptorSetCount, VkDescriptorSet* descriptorSet, VkDescriptorSetLayout& layout);
 

@@ -2,7 +2,7 @@
 #define _PELLENGINE_GRAPHICS_SHADER_H_
 
 #include "src/pellengine/graphics/window.h"
-#include "src/pellengine/io/asset_reader.h"
+#include "src/pellengine/io/io_locator.h"
 #include <memory>
 #include <string>
 

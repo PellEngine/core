@@ -7,10 +7,10 @@ Shader::~Shader() {}
 
 void Shader::initialize() {
   // Read shader code
-  size_t shaderSize = AssetReader::getFileLength(fileName);
+  size_t shaderSize = IOLocator::getAssetReader()->getFileLength(fileName);
   std::vector<char> shaderCode;
   shaderCode.resize(shaderSize);
-  AssetReader::getFileBuffer(fileName, shaderCode);
+  IOLocator::getAssetReader()->getFileBuffer(fileName, shaderCode);
 
   // Create shader module
   VkShaderModuleCreateInfo createInfo{};

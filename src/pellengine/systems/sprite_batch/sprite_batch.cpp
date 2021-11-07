@@ -2,10 +2,12 @@
 
 namespace pellengine {
 
-SpriteBatch::SpriteBatch(std::shared_ptr<Window> window, std::shared_ptr<EntityComponentSystem> ecs, std::shared_ptr<Renderer2D> renderer) : window(window), ecs(ecs), renderer(renderer) {
+SpriteBatch::SpriteBatch(
+  std::shared_ptr<Window> window,
+  std::shared_ptr<EntityComponentSystem> ecs,
+  std::shared_ptr<Renderer2D> renderer
+) : window(window), ecs(ecs), renderer(renderer) {
   this->uniformBuffer = std::make_shared<UniformBuffer>(window, sizeof(SpriteBatchUniformBufferObject));
-  this->pipeline = std::make_shared<SpriteBatchPipeline>(window, uniformBuffer);
-  SwapChainRecreator::registerGraphicsPipeline(this->pipeline);
   SwapChainRecreator::registerUniformBuffer(this->uniformBuffer);
 }
 SpriteBatch::~SpriteBatch() {}
@@ -22,8 +24,7 @@ void SpriteBatch::initialize() {
   // Initialize all the layers
   if(initialized) return;
   initialized = true;
-  pipeline->initialize();
-  for(std::shared_ptr<SpriteBatchLayer> layer : layers) {
+  for(std::shared_ptr<SpriteBatchLayer>& layer : layers) {
     layer->initialize();
   }
 }
@@ -31,10 +32,9 @@ void SpriteBatch::initialize() {
 void SpriteBatch::terminate() {
   if(!initialized) return;
   initialized = false;
-  for(std::shared_ptr<SpriteBatchLayer> layer : layers) {
+  for(std::shared_ptr<SpriteBatchLayer>& layer : layers) {
     layer->terminate();
   }
-  pipeline->terminate();
   uniformBuffer->terminate();
 }
 
@@ -47,20 +47,23 @@ void SpriteBatch::entityInserted(Entity entity) {
   // Find first sprite batch layer with room
   bool added = false;
   uint32_t index = 0;
+  Sprite& sprite = ecs->getComponent<Sprite>(entity);
 
   for(std::shared_ptr<SpriteBatchLayer> layer : layers) {
     if(layer->hasRoom()) {
-      layer->addSprite(entity);
-      entityToLayer.insert({ entity, index });
-      added = true;
-      break;
+      if((!layer->hasSpriteSheet(sprite.spriteSheet) && layer->hasTextureRoom()) || layer->hasSpriteSheet(sprite.spriteSheet)) {
+        layer->addSprite(entity);
+        entityToLayer.insert({ entity, index });
+        added = true;
+        break;
+      }
     }
     index++;
   }
 
   // Create new sprite batch layer and add entity
   if(!added) {
-    std::shared_ptr<SpriteBatchLayer> layer = std::make_shared<SpriteBatchLayer>(window, ecs, pipeline);
+    std::shared_ptr<SpriteBatchLayer> layer = std::make_shared<SpriteBatchLayer>(window, ecs, uniformBuffer);
     if(initialized) {
       layer->initialize();
     }

@@ -40,7 +40,6 @@ class SpriteBatch : public System {
   std::shared_ptr<Renderer2D> renderer;
   std::vector<std::shared_ptr<SpriteBatchLayer>> layers;
   std::unordered_map<Entity, uint32_t> entityToLayer;
-  std::shared_ptr<SpriteBatchPipeline> pipeline;
   std::shared_ptr<UniformBuffer> uniformBuffer;
 };
 

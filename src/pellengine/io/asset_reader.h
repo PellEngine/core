@@ -3,31 +3,15 @@
 
 #include <vector>
 #include <string>
-#include "src/pellengine/io/logger.h"
-
-#ifdef ANDROID
-  #include <android/native_activity.h>
-#endif
 
 namespace pellengine {
 
 class AssetReader {
  public:
-  AssetReader(const AssetReader&) = delete;
-  AssetReader &operator=(const AssetReader&) = delete;
-  
-  static size_t getFileLength(std::string filename);
-  static void getFileBuffer(std::string filename, std::vector<char>& data);
-
-  static AssetReader* getInstance();
-
-  #ifdef ANDROID
-    AAssetManager* androidAssetManager;
-  #endif
-  
- protected:
-  AssetReader();
-  static AssetReader* singleton_;
+  AssetReader() {}
+  virtual ~AssetReader() {}
+  virtual size_t getFileLength(std::string fileName) = 0;
+  virtual void getFileBuffer(std::string fileName, std::vector<char>& data) = 0;
 };
 
 }

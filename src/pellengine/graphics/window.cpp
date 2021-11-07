@@ -3,9 +3,13 @@
 namespace pellengine {
 
 Window::Window(const std::string name, bool enableValidationLayers) {
-  this->instance = new Instance(name, enableValidationLayers);
   this->initialized = false;
   this->enableValidationLayers = enableValidationLayers;
+
+  // Create instance based on current platform
+  #ifdef ANDROID
+    this->instance = new InstanceAndroid(name, enableValidationLayers);
+  #endif
 }
 
 Window::~Window() {

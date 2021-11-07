@@ -62,23 +62,7 @@ void Instance::terminate() {
   vkDestroySurfaceKHR(instance, surface, nullptr);
   vkDestroyInstance(instance, nullptr);
 
-  #ifdef ANDROID
-    this->androidPlatformWindow = nullptr;
-  #endif
-
   initialized = false;
-}
-
-int Instance::getWidth() {
-  #ifdef ANDROID
-    return ANativeWindow_getWidth(this->androidPlatformWindow);
-  #endif
-}
-
-int Instance::getHeight() {
-  #ifdef ANDROID
-    return ANativeWindow_getHeight(this->androidPlatformWindow);
-  #endif
 }
 
 /*
@@ -108,11 +92,7 @@ void Instance::createInstance() {
 
   // Specify extensions required by current platform
   std::vector<const char*> instanceExtensions;
-
-  #ifdef ANDROID
-    instanceExtensions.push_back("VK_KHR_surface");
-    instanceExtensions.push_back("VK_KHR_android_surface");
-  #endif
+  getInstanceExtensions(instanceExtensions);
 
   if(enableValidationLayers) {
     instanceExtensions.push_back("VK_EXT_debug_utils");
@@ -170,20 +150,6 @@ void Instance::setupDebugMessenger() {
   if(!enableValidationLayers) return;
   VkDebugUtilsMessengerCreateInfoEXT createInfo;
   populateDebugMessengerCreateInfo(createInfo);
-}
-
-void Instance::createSurface() {
-  #ifdef ANDROID
-    VkAndroidSurfaceCreateInfoKHR createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
-    createInfo.pNext = nullptr;
-    createInfo.flags = 0;
-    createInfo.window = androidPlatformWindow;
-
-    if(vkCreateAndroidSurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCCESS) {
-      throw std::runtime_error("Failed to create android surface.");
-    }
-  #endif
 }
 
 void Instance::pickPhysicalDevice() {

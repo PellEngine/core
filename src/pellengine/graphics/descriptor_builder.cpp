@@ -35,11 +35,11 @@ DescriptorBuilder& DescriptorBuilder::bindBuffer(uint32_t binding, VkDescriptorB
   return *this;
 }
 
-DescriptorBuilder& DescriptorBuilder::bindTexture(uint32_t binding, VkDescriptorImageInfo* imageInfo, VkDescriptorType type, VkShaderStageFlags stageFlags) {
+DescriptorBuilder& DescriptorBuilder::bindTexture(uint32_t binding, VkDescriptorImageInfo* imageInfo, uint32_t imageInfoCount, VkDescriptorType type, VkShaderStageFlags stageFlags) {
   VkDescriptorSetLayoutBinding layoutBinding{};
   layoutBinding.binding = binding;
   layoutBinding.descriptorType = type;
-  layoutBinding.descriptorCount = 1;
+  layoutBinding.descriptorCount = imageInfoCount;
   layoutBinding.stageFlags = stageFlags;
   layoutBinding.pImmutableSamplers = nullptr;
   bindings.push_back(layoutBinding);
@@ -50,7 +50,7 @@ DescriptorBuilder& DescriptorBuilder::bindTexture(uint32_t binding, VkDescriptor
     write.dstBinding = binding;
     write.dstArrayElement = 0;
     write.descriptorType = type;
-    write.descriptorCount = 1;
+    write.descriptorCount = imageInfoCount;
     write.pImageInfo = imageInfo;
     writes[i].push_back(write);
   }

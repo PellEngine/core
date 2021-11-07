@@ -3,6 +3,7 @@
 
 #include "src/pellengine/vulkan/vulkan_wrapper.h"
 #include "src/pellengine/graphics/instance.h"
+#include "src/pellengine/graphics/instance_android.h"
 #include <string>
 #include <vector>
 

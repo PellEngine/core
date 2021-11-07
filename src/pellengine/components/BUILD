@@ -11,6 +11,7 @@ cc_library(
     "transform.h",
   ],
   deps = [
-    "@glm//:glm"
+    "@glm//:glm",
+    "//src/pellengine/graphics:graphics_fwd"
   ]
 )

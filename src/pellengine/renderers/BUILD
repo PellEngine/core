@@ -18,6 +18,7 @@ cc_binary(
     "//src/pellengine/vulkan:vulkan",
     "//src/pellengine/io:io",
     "@stb//:stb",
+    "@glm//:glm",
   ],
 )
 

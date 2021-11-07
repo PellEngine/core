@@ -9,14 +9,16 @@
 #include "src/pellengine/components/sprite.h"
 #include "src/pellengine/renderers/renderer2D/renderer2D.h"
 #include "sprite_batch_pipeline.h"
+#include <string>
 
 namespace pellengine {
 
 const uint32_t SPRITE_BATCH_MAX_SPRITES = 4096;
+const uint32_t SPRITE_BATCH_MAX_TEXTURES = 8;
 
 class SpriteBatchLayer : public Renderable2D {
  public:
-  SpriteBatchLayer(std::shared_ptr<Window> window, std::shared_ptr<EntityComponentSystem> ecs, std::shared_ptr<SpriteBatchPipeline> pipeline);
+  SpriteBatchLayer(std::shared_ptr<Window> window, std::shared_ptr<EntityComponentSystem> ecs, std::shared_ptr<UniformBuffer> uniformBuffer);
   virtual ~SpriteBatchLayer();
 
   SpriteBatchLayer(const SpriteBatchLayer&) = delete;
@@ -32,9 +34,18 @@ class SpriteBatchLayer : public Renderable2D {
     return numSprites < SPRITE_BATCH_MAX_SPRITES;
   }
 
+  bool hasTextureRoom() {
+    return pipeline->getSpriteSheets().size() < SPRITE_BATCH_MAX_TEXTURES;
+  }
+
+  bool hasSpriteSheet(std::shared_ptr<SpriteSheet> spriteSheet) {
+    return std::find(pipeline->getSpriteSheets().begin(), pipeline->getSpriteSheets().end(), spriteSheet) != pipeline->getSpriteSheets().end();
+  }
+
   void render(VkCommandBuffer& commandBuffer, uint32_t imageIndex) override;
  
  private:
+  bool initialized = false;
   std::shared_ptr<Window> window;
   std::shared_ptr<EntityComponentSystem> ecs;
   std::shared_ptr<SpriteBatchPipeline> pipeline;
@@ -46,7 +57,9 @@ class SpriteBatchLayer : public Renderable2D {
   std::array<uint16_t, SPRITE_BATCH_MAX_SPRITES * 6> indices;
   std::unordered_map<Entity, uint32_t> entityToIndex;
   std::unordered_map<uint32_t, Entity> indexToEntity;
+  std::unordered_map<Entity, uint16_t> entityToTextureID;
   uint32_t numSprites = 0;
+  std::shared_ptr<DescriptorAllocator> allocator;
 
   void loadVertexProperties(Entity entity, uint32_t index);
 };
