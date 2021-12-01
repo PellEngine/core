@@ -4,6 +4,7 @@ load("@com_grail_bazel_compdb//:aspects.bzl", "compilation_database")
 filegroup(
   name = "build_all",
   srcs = [
+    "//src/pellengine:core",
     "//src/pellengine/graphics:graphics",
     "//src/pellengine/io:io",
     "//src/pellengine/vulkan:vulkan",
@@ -15,6 +16,7 @@ filegroup(
 compilation_database(
   name = "pellengine_compdb",
   targets = [
+    "//src/pellengine:core",
     "//src/pellengine/graphics:libgraphics.so",
     "//src/pellengine/io:libio.so",
     "//src/pellengine/vulkan:libpellengine_vulkan.so",
@@ -22,4 +24,16 @@ compilation_database(
     "//src/pellengine/ecs:ecs",
     "//src/pellengine/renderers:librenderers.so"
   ]
+)
+
+cc_library(
+  name = "core",
+  srcs = [],
+  hdrs = [
+    "app.h"
+  ],
+  deps = [
+    "//src/pellengine/graphics:graphics_fwd",
+    "//src/pellengine/io:io",
+  ],
 )
