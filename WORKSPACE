@@ -1,5 +1,5 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository", "new_git_repository")
 
 http_archive(
   name = "com_grail_bazel_compdb",
@@ -13,22 +13,25 @@ git_repository(
   tag = "v0.0.3",
 )
 
-new_local_repository(
+new_git_repository(
   name = "ctti",
-  path = "src/ctti/",
-  build_file = "src/third_party/ctti.BUILD"
+  remote = "https://github.com/PellEngine/ctti.git",
+  build_file = "@//src/third_party:BUILD.ctti",
+  branch = "master"
 )
 
-new_local_repository(
+new_git_repository(
   name = "glm",
-  path = "src/glm/",
-  build_file = "src/third_party/glm.BUILD"
+  remote = "https://github.com/PellEngine/glm.git",
+  build_file = "@//src/third_party:BUILD.glm",
+  branch = "master"
 )
 
-new_local_repository(
+new_git_repository(
   name = "stb",
-  path = "src/stb/",
-  build_file = "src/third_party/stb.BUILD"
+  remote = "https://github.com/PellEngine/stb.git",
+  build_file = "@//src/third_party:BUILD.stb",
+  branch = "master"
 )
 
 load("@rules_vulkan//vulkan:repositories.bzl", "vulkan_repositories")

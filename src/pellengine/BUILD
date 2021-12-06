@@ -28,12 +28,19 @@ compilation_database(
 
 cc_library(
   name = "core",
-  srcs = [],
+  srcs = [
+    "app.ipp",
+  ],
   hdrs = [
-    "app.h"
+    "app.h",
+    "app.ipp",
   ],
   deps = [
+    "//src/pellengine/ecs:ecs",
     "//src/pellengine/graphics:graphics_fwd",
     "//src/pellengine/io:io",
+    "@glm//:glm",
+    "@ctti//:ctti",
+    "@stb//:stb",
   ],
 )
